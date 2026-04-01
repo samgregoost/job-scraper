@@ -37,51 +37,49 @@ class LinkedInRapidScraper(BaseScraper):
             location = locations[0] if locations else ""
 
         for query in queries:
-            for page_num in range(1, 4):
-                try:
-                    headers = {
-                        "X-RapidAPI-Key": api_key,
-                        "X-RapidAPI-Host": "linkedin-jobs-search.p.rapidapi.com",
-                        "Content-Type": "application/json",
-                    }
-                    payload = {
-                        "search_terms": query,
-                        "location": location,
-                        "page": str(page_num),
-                    }
+            try:
+                headers = {
+                    "X-RapidAPI-Key": api_key,
+                    "X-RapidAPI-Host": "linkedin-jobs-search.p.rapidapi.com",
+                    "Content-Type": "application/json",
+                }
+                payload = {
+                    "search_terms": query,
+                    "location": location,
+                    "page": "1",
+                }
 
-                    resp = requests.post(API_URL, json=payload, headers=headers, timeout=30)
-                    resp.raise_for_status()
-                    data = resp.json()
-                    items = data if isinstance(data, list) else []
+                resp = requests.post(API_URL, json=payload, headers=headers, timeout=30)
+                resp.raise_for_status()
+                data = resp.json()
 
-                    if not items:
-                        break
+                for item in data if isinstance(data, list) else []:
+                    url = item.get("linkedin_job_url_cleaned", "")
 
-                    for item in items:
-                        url = item.get("linkedin_job_url_cleaned", "")
-                        description = _fetch_linkedin_description(url)
+                    # Try to fetch description from the public LinkedIn page
+                    description = _fetch_linkedin_description(url)
 
-                        jobs.append(
-                            Job(
-                                source=self.name,
-                                external_id=item.get("job_id", url),
-                                title=item.get("job_title", ""),
-                                company=item.get("company_name", ""),
-                                location=item.get("job_location", ""),
-                                url=url,
-                                description=description,
-                                remote="remote" in item.get("job_location", "").lower(),
-                                posted_date=_parse_date(item.get("posted_date")),
-                                scraped_at=datetime.now(),
-                            )
+                    jobs.append(
+                        Job(
+                            source=self.name,
+                            external_id=item.get("job_id", url),
+                            title=item.get("job_title", ""),
+                            company=item.get("company_name", ""),
+                            location=item.get("job_location", ""),
+                            url=url,
+                            description=description,
+                            remote="remote" in item.get("job_location", "").lower(),
+                            posted_date=_parse_date(item.get("posted_date")),
+                            scraped_at=datetime.now(),
                         )
+                    )
 
-                    logger.info(f"LinkedIn RapidAPI: fetched {len(items)} jobs for '{query}' (page {page_num})")
-                    time.sleep(2)
-                except Exception as e:
-                    logger.error(f"LinkedIn RapidAPI scrape failed for '{query}' page {page_num}: {e}")
-                    break
+                count = len(data) if isinstance(data, list) else 0
+                logger.info(f"LinkedIn RapidAPI: fetched {count} jobs for '{query}'")
+            except Exception as e:
+                logger.error(f"LinkedIn RapidAPI scrape failed for '{query}': {e}")
+
+            time.sleep(2)
 
         return jobs
 

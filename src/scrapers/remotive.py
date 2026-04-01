@@ -36,7 +36,7 @@ class RemotiveScraper(BaseScraper):
             try:
                 resp = requests.get(
                     API_URL,
-                    params={"search": query, "limit": 100},
+                    params={"search": query, "limit": 50},
                     timeout=30,
                 )
                 resp.raise_for_status()
