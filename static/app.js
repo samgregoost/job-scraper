@@ -21,10 +21,14 @@ function showPage(page) {
     document.querySelector(`.nav-link[data-page="${page}"]`)?.classList.add('active');
     currentPage = page;
 
-    if (page === 'dashboard') loadDashboard();
-    else if (page === 'jobs') { loadSources(); loadJobs(); }
-    else if (page === 'settings') { loadConfig(); loadCVStatus(); }
-    else if (page === 'logs') loadLogs();
+    try {
+        if (page === 'dashboard') loadDashboard();
+        else if (page === 'jobs') { loadSources(); loadJobs(); }
+        else if (page === 'settings') { loadConfig(); loadCVStatus(); }
+        else if (page === 'logs') loadLogs();
+    } catch (e) {
+        console.error('Page load error:', e);
+    }
 }
 
 // ── Dashboard ─────────────────────────────────────
@@ -810,8 +814,13 @@ async function api(url, opts = {}) {
         fetchOpts.headers['Content-Type'] = 'application/json';
         fetchOpts.body = JSON.stringify(opts.body);
     }
-    const resp = await fetch(url, fetchOpts);
-    return resp.json();
+    try {
+        const resp = await fetch(url, fetchOpts);
+        return await resp.json();
+    } catch (e) {
+        console.error(`API error ${url}:`, e);
+        return {};
+    }
 }
 
 function scoreBadge(score, category) {
