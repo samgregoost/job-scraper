@@ -27,13 +27,17 @@ class SerpApiGoogleScraper(BaseScraper):
         queries = self._build_search_queries()
         locations = self.preferences.get("locations", [""])
 
+        per_query_limit = max(10, self.max_results // max(len(queries), 1))
         for query in queries:
             if len(jobs) >= self.max_results:
                 break
             location = locations[0] if locations else ""
             next_page_token = None
+            query_start = len(jobs)
 
-            for page in range(3):
+            for page in range(max(1, per_query_limit // 10)):
+                if len(jobs) - query_start >= per_query_limit:
+                    break
                 try:
                     params = {
                         "engine": "google_jobs",
