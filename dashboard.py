@@ -319,9 +319,12 @@ def _run_pipeline_thread():
         if all_jobs:
             pipeline_state["progress"] = "Saving to database..."
             db = Database(config["database"]["path"])
-            db.clear_all_scores()
             new_jobs = db.insert_jobs(all_jobs)
             result["new"] = len(new_jobs)
+
+            # Clear scores right before re-scoring (not earlier)
+            pipeline_state["progress"] = "Clearing old scores..."
+            db.clear_all_scores()
 
             # Score ALL jobs in DB with current preferences
             all_db_rows = db.conn.execute("SELECT * FROM jobs").fetchall()

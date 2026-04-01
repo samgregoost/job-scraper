@@ -764,13 +764,21 @@ async function loadLogs() {
 }
 
 // ── Polling ───────────────────────────────────────
+let pipelineWasRunning = false;
+
 function startStatPolling() {
     setInterval(async () => {
         if (currentPage === 'dashboard') {
             try {
                 const stats = await api('/api/stats');
                 updatePipelineStatus(stats);
-                if (!stats.pipeline_running && document.getElementById('runPipelineBtn').disabled) {
+
+                if (stats.pipeline_running) {
+                    pipelineWasRunning = true;
+                    // Only update the status indicator, NOT the job data
+                } else if (pipelineWasRunning) {
+                    // Pipeline just finished — now refresh everything
+                    pipelineWasRunning = false;
                     document.getElementById('runPipelineBtn').disabled = false;
                     loadDashboard();
                 }

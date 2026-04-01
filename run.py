@@ -77,14 +77,14 @@ def run_pipeline(config: dict | None = None):
 
     # 3. Store in database (dedup)
     db = Database(config["database"]["path"])
-    db.clear_all_scores()
     new_jobs = db.insert_jobs(all_jobs)
     logger.info(f"New jobs (not seen before): {len(new_jobs)}")
 
     # 4. Score ALL jobs (new + existing) with current preferences
     all_db_jobs = _load_all_jobs(db)
     if all_db_jobs:
-        # Step 1: Rule-based fast scoring on ALL jobs in DB
+        # Clear scores right before re-scoring (minimizes time with no scores)
+        db.clear_all_scores()
         logger.info(f"Scoring all {len(all_db_jobs)} jobs with current preferences...")
         scored = score_jobs(
             all_db_jobs,
