@@ -30,7 +30,10 @@ class TheMuseScraper(BaseScraper):
             self.preferences.get("experience_level", "mid"), "Mid Level"
         )
 
-        for page in range(0, 3):
+        max_pages = max(1, self.max_results // 20)
+        for page in range(0, max_pages):
+            if len(jobs) >= self.max_results:
+                break
             try:
                 params = {
                     "page": page,

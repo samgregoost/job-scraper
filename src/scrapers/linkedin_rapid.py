@@ -36,8 +36,11 @@ class LinkedInRapidScraper(BaseScraper):
         if not location:
             location = locations[0] if locations else ""
 
+        max_pages = max(1, self.max_results // 10)
         for query in queries:
-            for page_num in range(1, 4):
+            if len(jobs) >= self.max_results:
+                break
+            for page_num in range(1, max_pages + 1):
                 try:
                     headers = {
                         "X-RapidAPI-Key": api_key,

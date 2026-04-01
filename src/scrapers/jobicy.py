@@ -21,11 +21,14 @@ class JobicyScraper(BaseScraper):
         jobs = []
         queries = self._build_search_queries()
 
+        per_query = min(self.max_results, 50)
         for query in queries:
+            if len(jobs) >= self.max_results:
+                break
             try:
                 resp = requests.get(
                     API_URL,
-                    params={"count": 50, "tag": query},
+                    params={"count": per_query, "tag": query},
                     timeout=30,
                     headers={"User-Agent": "JobScraper/1.0"},
                 )

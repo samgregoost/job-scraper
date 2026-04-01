@@ -27,8 +27,11 @@ class AdzunaScraper(BaseScraper):
         jobs = []
         queries = self._build_search_queries()
 
+        max_pages = max(1, self.max_results // 50)
         for query in queries:
-            for page in range(1, 4):
+            if len(jobs) >= self.max_results:
+                break
+            for page in range(1, max_pages + 1):
                 try:
                     url = f"https://api.adzuna.com/v1/api/jobs/{country}/search/{page}"
                     resp = requests.get(

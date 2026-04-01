@@ -19,9 +19,11 @@ class LandingJobsScraper(BaseScraper):
 
     def scrape(self) -> list[Job]:
         jobs = []
-        max_pages = 3
+        max_pages = max(1, self.max_results // 50)
 
         for page in range(1, max_pages + 1):
+            if len(jobs) >= self.max_results:
+                break
             try:
                 resp = requests.get(
                     API_URL,

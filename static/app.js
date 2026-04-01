@@ -495,10 +495,15 @@ function renderScraperToggles(scrapers) {
                 <div class="scraper-name">${name}</div>
                 <div class="scraper-desc">${info[name] || ''}</div>
             </div>
-            <label class="toggle-label">
-                <input type="checkbox" id="scraper_${name}" ${conf.enabled ? 'checked' : ''}>
-                <span>Enabled</span>
-            </label>
+            <div style="display:flex;align-items:center;gap:12px">
+                <label style="font-size:11px;color:var(--text-dim);white-space:nowrap">Max:
+                    <input type="number" class="input" id="scraper_max_${name}" value="${conf.max_results || 50}" min="10" max="500" style="width:70px;padding:4px 6px;font-size:12px">
+                </label>
+                <label class="toggle-label">
+                    <input type="checkbox" id="scraper_${name}" ${conf.enabled ? 'checked' : ''}>
+                    <span>On</span>
+                </label>
+            </div>
         </div>
     `).join('');
 }
@@ -536,10 +541,12 @@ async function saveConfig() {
         experience_match: parseInt(document.getElementById('wExp').value) / 100,
     };
 
-    // Scraper toggles
+    // Scraper toggles + max_results
     for (const name of Object.keys(config.scrapers)) {
         const chk = document.getElementById('scraper_' + name);
         if (chk) config.scrapers[name].enabled = chk.checked;
+        const maxInput = document.getElementById('scraper_max_' + name);
+        if (maxInput) config.scrapers[name].max_results = parseInt(maxInput.value) || 50;
     }
 
     // API Keys — save and auto-enable if key is provided

@@ -20,9 +20,9 @@ class ArbeitnowScraper(BaseScraper):
     def scrape(self) -> list[Job]:
         jobs = []
         page = 1
-        max_pages = 3
+        max_pages = max(1, self.max_results // 100)
 
-        while page <= max_pages:
+        while page <= max_pages and len(jobs) < self.max_results:
             try:
                 resp = requests.get(API_URL, params={"page": page}, timeout=30)
                 resp.raise_for_status()

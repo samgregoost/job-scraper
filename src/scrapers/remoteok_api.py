@@ -28,8 +28,9 @@ class RemoteOKAPIScraper(BaseScraper):
             resp.raise_for_status()
             data = resp.json()
 
-            # First item is metadata, skip it
+            # First item is metadata, skip it. Limit to max_results.
             items = data[1:] if len(data) > 1 else []
+            items = items[:self.max_results]
 
             for item in items:
                 if not isinstance(item, dict):

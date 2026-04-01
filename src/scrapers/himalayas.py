@@ -20,10 +20,12 @@ class HimalayasScraper(BaseScraper):
     def scrape(self) -> list[Job]:
         jobs = []
         offset = 0
-        max_pages = 3
         limit = 50
+        max_pages = max(1, self.max_results // limit)
 
         for page in range(max_pages):
+            if len(jobs) >= self.max_results:
+                break
             try:
                 resp = requests.get(
                     API_URL,

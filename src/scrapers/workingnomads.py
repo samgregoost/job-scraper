@@ -30,6 +30,7 @@ class WorkingNomadsScraper(BaseScraper):
 
             if not isinstance(data, list):
                 data = []
+            data = data[:self.max_results]
 
             for item in data:
                 jobs.append(

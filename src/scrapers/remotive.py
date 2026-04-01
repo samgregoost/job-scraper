@@ -32,11 +32,14 @@ class RemotiveScraper(BaseScraper):
                 queries.add(skill.lower())
         queries = list(queries)[:8]  # Cap at 8 queries to avoid rate limits
 
+        per_query = min(self.max_results, 100)
         for query in queries:
+            if len(jobs) >= self.max_results:
+                break
             try:
                 resp = requests.get(
                     API_URL,
-                    params={"search": query, "limit": 100},
+                    params={"search": query, "limit": per_query},
                     timeout=30,
                 )
                 resp.raise_for_status()
