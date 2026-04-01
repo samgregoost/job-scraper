@@ -1,0 +1,28 @@
+# Data
+data/
+*.db
+
+# Logs
+*.log
+
+# CV files (private)
+cv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env

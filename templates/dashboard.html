@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Scraper Dashboard</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">JS</div>
+    <span class="brand-text">Job Scraper</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#" class="nav-link active" data-page="dashboard" onclick="showPage('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard</a></li>
+    <li><a href="#" class="nav-link" data-page="jobs" onclick="showPage('jobs')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      Jobs</a></li>
+    <li><a href="#" class="nav-link" data-page="settings" onclick="showPage('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      Settings</a></li>
+    <li><a href="#" class="nav-link" data-page="logs" onclick="showPage('logs')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Logs</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <button class="btn btn-primary btn-block" id="runPipelineBtn" onclick="runPipeline()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Run Scraper
+    </button>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content">
+
+  <!-- Dashboard Page -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <h1>Dashboard</h1>
+      <div class="header-actions">
+        <span class="pipeline-status" id="pipelineStatus"></span>
+      </div>
+    </div>
+
+    <!-- Score Filter -->
+    <div class="score-filter-bar">
+      <label>Min Score: <strong id="minScoreLabel">0</strong></label>
+      <input type="range" class="range" id="dashMinScore" min="0" max="90" step="5" value="0" oninput="onMinScoreChange(this.value)">
+      <span class="score-filter-info" id="scoreFilterInfo"></span>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotal">--</div>
+        <div class="stat-label">Total Jobs</div>
+        <div class="stat-sub" id="statToday">-- today</div>
+      </div>
+      <div class="stat-card accent-green">
+        <div class="stat-value" id="statPerfect">--</div>
+        <div class="stat-label">Perfect Matches</div>
+        <div class="stat-sub">Score 80+</div>
+      </div>
+      <div class="stat-card accent-blue">
+        <div class="stat-value" id="statStrong">--</div>
+        <div class="stat-label">Strong Matches</div>
+        <div class="stat-sub">Score 60-79</div>
+      </div>
+      <div class="stat-card accent-yellow">
+        <div class="stat-value" id="statWorth">--</div>
+        <div class="stat-label">Worth a Look</div>
+        <div class="stat-sub">Score 40-59</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statAvgScore">--</div>
+        <div class="stat-label">Avg Score</div>
+        <div class="stat-sub" id="statSources">-- sources</div>
+      </div>
+    </div>
+
+    <!-- Application Pipeline -->
+    <div class="card">
+      <div class="card-header">Application Pipeline</div>
+      <div class="card-body">
+        <div class="pipeline-track" id="pipelineTrack"></div>
+        <div class="pipeline-stages" id="pipelineStages"></div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+      <div class="card">
+        <div class="card-header">Score Distribution</div>
+        <div class="card-body" id="chartScoreDist"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">Jobs by Category</div>
+        <div class="card-body" id="chartCategories"></div>
+      </div>
+    </div>
+
+    <!-- Sources Table -->
+    <div class="card">
+      <div class="card-header">
+        Scraper Sources
+        <span class="card-link" id="sourcesTotal"></span>
+      </div>
+      <div class="card-body no-pad">
+        <table class="table" id="sourcesTable">
+          <thead>
+            <tr><th>Source</th><th>Status</th><th>Jobs Found</th><th>% of Total</th><th>Bar</th></tr>
+          </thead>
+          <tbody id="sourcesBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Top Matches -->
+    <div class="card">
+      <div class="card-header">
+        Top Matches
+        <a href="#" class="card-link" onclick="showPage('jobs'); return false;">View All</a>
+      </div>
+      <div class="card-body no-pad">
+        <table class="table" id="topMatchesTable">
+          <thead>
+            <tr><th>Score</th><th>Title</th><th>Company</th><th>Location</th><th>Source</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="topMatchesBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jobs Page -->
+  <div class="page" id="page-jobs">
+    <div class="page-header">
+      <h1>Jobs</h1>
+    </div>
+
+    <div class="filters-bar">
+      <input type="text" class="input" id="searchInput" placeholder="Search jobs..." oninput="debounce(loadJobs, 300)()">
+      <select class="input" id="filterCategory" onchange="loadJobs()">
+        <option value="all">All Categories</option>
+        <option value="Perfect Match">Perfect Match</option>
+        <option value="Strong Match">Strong Match</option>
+        <option value="Worth a Look">Worth a Look</option>
+        <option value="Weak Match">Weak Match</option>
+      </select>
+      <select class="input" id="filterSource" onchange="loadJobs()">
+        <option value="all">All Sources</option>
+      </select>
+      <select class="input" id="filterStatus" onchange="loadJobs()">
+        <option value="all">All Status</option>
+        <option value="new">New</option>
+        <option value="applied">Applied</option>
+        <option value="interviewing">Interviewing</option>
+        <option value="rejected">Rejected</option>
+        <option value="offer">Offer</option>
+        <option value="saved">Saved</option>
+      </select>
+      <select class="input" id="sortBy" onchange="loadJobs()">
+        <option value="score">Score (High-Low)</option>
+        <option value="scraped_at">Newest First</option>
+        <option value="title">Title (A-Z)</option>
+        <option value="company">Company (A-Z)</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="card-body no-pad">
+        <table class="table" id="jobsTable">
+          <thead>
+            <tr>
+              <th style="width:70px">Score</th>
+              <th>Title</th>
+              <th>Company</th>
+              <th>Location</th>
+              <th>Skills</th>
+              <th>Status</th>
+              <th style="width:100px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="jobsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- Settings Page -->
+  <div class="page" id="page-settings">
+    <div class="page-header">
+      <h1>Settings</h1>
+      <div class="header-actions">
+        <button class="btn btn-outline" onclick="loadConfig()">Reset</button>
+        <button class="btn btn-primary" onclick="saveConfig()">Save Settings</button>
+      </div>
+    </div>
+
+    <div class="settings-grid">
+      <!-- What I'm looking for -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-header">What I'm Looking For</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Describe your ideal job in your own words</label>
+            <textarea class="input search-statement" id="cfgSearchStatement" rows="4" placeholder="Example: I'm looking for a mid-senior communications or PR role in Europe, ideally in the sustainability or international development space. I want to lead campaigns, manage media relationships, and shape public narratives. Flexible or remote work is important to me. I'm open to NGOs, think tanks, or progressive companies."></textarea>
+            <small style="color:var(--text-dim);display:block;margin-top:6px">This is sent directly to AI matching as your primary intent. Be specific about industry, culture, work style, deal-breakers, or anything that structured fields can't capture.</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences -->
+      <div class="card">
+        <div class="card-header">Job Preferences</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Job Titles (one per line)</label>
+            <textarea class="input" id="cfgTitles" rows="4"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Skills (one per line)</label>
+            <textarea class="input" id="cfgSkills" rows="5"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Locations (one per line)</label>
+            <textarea class="input" id="cfgLocations" rows="3"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Remote Preference</label>
+              <select class="input" id="cfgRemote">
+                <option value="remote_only">Remote Only</option>
+                <option value="remote_preferred">Remote Preferred</option>
+                <option value="onsite_ok">On-site OK</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Experience Level</label>
+              <select class="input" id="cfgExperience">
+                <option value="junior">Junior</option>
+                <option value="mid">Mid</option>
+                <option value="senior">Senior</option>
+                <option value="lead">Lead</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Salary Min</label>
+              <input type="number" class="input" id="cfgSalaryMin">
+            </div>
+            <div class="form-group">
+              <label>Salary Max</label>
+              <input type="number" class="input" id="cfgSalaryMax">
+            </div>
+            <div class="form-group">
+              <label>Currency</label>
+              <input type="text" class="input" id="cfgSalaryCurrency" placeholder="USD">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CV Upload -->
+      <div class="card">
+        <div class="card-header">CV / Resume</div>
+        <div class="card-body">
+          <div class="cv-dropzone" id="cvDropzone"
+               onclick="document.getElementById('cvFileInput').click()"
+               ondragover="event.preventDefault(); this.classList.add('dragover')"
+               ondragleave="this.classList.remove('dragover')"
+               ondrop="event.preventDefault(); this.classList.remove('dragover'); handleDrop(event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px;margin-bottom:12px;opacity:0.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p>Click or drag to upload CV</p>
+            <small>Supports PDF, DOCX, and TXT files</small>
+            <input type="file" id="cvFileInput" hidden accept=".pdf,.docx,.txt" onchange="uploadCV(this)" multiple>
+          </div>
+          <div id="cvStatus" class="cv-status"></div>
+          <div id="cvExtracted" class="cv-extracted" style="display:none">
+            <div class="cv-section-header">
+              <span>Detected Skills</span>
+              <small id="cvMatchInfo" style="color:var(--text-dim)"></small>
+            </div>
+            <div class="skill-tags" id="cvDetectedSkills"></div>
+            <div class="cv-section-header" style="margin-top:12px">
+              <span>Extracted Text Preview</span>
+              <button class="btn btn-sm btn-outline" onclick="toggleCVPreview()">Show/Hide</button>
+            </div>
+            <div class="cv-preview-text" id="cvPreviewText" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scrapers -->
+      <div class="card">
+        <div class="card-header">Scraper Sources</div>
+        <div class="card-body" id="scraperToggles"></div>
+      </div>
+
+      <!-- API Keys -->
+      <div class="card">
+        <div class="card-header">API Keys (for premium sources)</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>LinkedIn RapidAPI Key</label>
+            <input type="password" class="input" id="cfgLinkedinKey" placeholder="Get free key at rapidapi.com/jaypat87/api/linkedin-jobs-search">
+            <small style="color:var(--text-dim);display:block;margin-top:4px">50 free requests/month — <a href="https://rapidapi.com/jaypat87/api/linkedin-jobs-search" target="_blank">Get key</a></small>
+          </div>
+          <div class="form-group">
+            <label>Adzuna App ID</label>
+            <input type="text" class="input" id="cfgAdzunaId" placeholder="Register at developer.adzuna.com">
+          </div>
+          <div class="form-group">
+            <label>Adzuna App Key</label>
+            <input type="password" class="input" id="cfgAdzunaKey">
+            <small style="color:var(--text-dim);display:block;margin-top:4px">250 free calls/month — <a href="https://developer.adzuna.com/" target="_blank">Get key</a></small>
+          </div>
+          <div class="form-group">
+            <label>SerpAPI Key (Google Jobs)</label>
+            <input type="password" class="input" id="cfgSerpApiKey" placeholder="100 free searches/month">
+            <small style="color:var(--text-dim);display:block;margin-top:4px">100 free searches/month — <a href="https://serpapi.com/" target="_blank">Get key</a></small>
+          </div>
+        </div>
+      </div>
+
+      <!-- LLM Matching -->
+      <div class="card">
+        <div class="card-header">LLM Matching (Claude AI)</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="toggle-label">
+              <input type="checkbox" id="cfgLlmEnabled">
+              <span>Enable AI-powered matching</span>
+            </label>
+            <small style="color:var(--text-dim);display:block;margin-top:4px">Uses Claude to deeply analyze top matches with reasoning. Rule-based scoring still runs on all jobs first.</small>
+          </div>
+          <div class="form-group">
+            <label>Anthropic API Key</label>
+            <input type="password" class="input" id="cfgLlmApiKey" placeholder="sk-ant-...">
+            <small style="color:var(--text-dim);display:block;margin-top:4px"><a href="https://console.anthropic.com/settings/keys" target="_blank">Get key from console.anthropic.com</a></small>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Model</label>
+              <select class="input" id="cfgLlmModel">
+                <option value="claude-haiku-4-5-20251001">Haiku 4.5 (fast, ~$0.02/run)</option>
+                <option value="claude-sonnet-4-6">Sonnet 4.6 (best quality, ~$0.15/run)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Top N to analyze</label>
+              <input type="number" class="input" id="cfgLlmTopN" value="30" min="5" max="100">
+              <small style="color:var(--text-dim);display:block;margin-top:4px">How many top matches get LLM analysis</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="card">
+        <div class="card-header">Email Settings</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="toggle-label">
+              <input type="checkbox" id="cfgEmailEnabled">
+              <span>Enable email digest</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>SMTP Host</label>
+            <input type="text" class="input" id="cfgSmtpHost" placeholder="smtp.gmail.com">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>SMTP Port</label>
+              <input type="number" class="input" id="cfgSmtpPort" placeholder="587">
+            </div>
+            <div class="form-group">
+              <label>Schedule Time</label>
+              <input type="time" class="input" id="cfgScheduleTime">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>SMTP User</label>
+            <input type="text" class="input" id="cfgSmtpUser">
+          </div>
+          <div class="form-group">
+            <label>SMTP Password (App Password)</label>
+            <input type="password" class="input" id="cfgSmtpPassword">
+          </div>
+          <div class="form-group">
+            <label>From Address</label>
+            <input type="email" class="input" id="cfgFromAddr">
+          </div>
+          <div class="form-group">
+            <label>To Addresses (one per line)</label>
+            <textarea class="input" id="cfgToAddrs" rows="2"></textarea>
+          </div>
+          <button class="btn btn-outline" onclick="testEmail()" style="margin-top:8px">Send Test Email</button>
+        </div>
+      </div>
+
+      <!-- Scoring Weights -->
+      <div class="card">
+        <div class="card-header">Scoring Weights</div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Skills Match <span class="weight-val" id="wSkillsVal">0.35</span></label>
+            <input type="range" class="range" id="wSkills" min="0" max="100" value="35" oninput="updateWeightDisplay()">
+          </div>
+          <div class="form-group">
+            <label>Title Match <span class="weight-val" id="wTitleVal">0.25</span></label>
+            <input type="range" class="range" id="wTitle" min="0" max="100" value="25" oninput="updateWeightDisplay()">
+          </div>
+          <div class="form-group">
+            <label>Location Match <span class="weight-val" id="wLocationVal">0.20</span></label>
+            <input type="range" class="range" id="wLocation" min="0" max="100" value="20" oninput="updateWeightDisplay()">
+          </div>
+          <div class="form-group">
+            <label>Salary Match <span class="weight-val" id="wSalaryVal">0.10</span></label>
+            <input type="range" class="range" id="wSalary" min="0" max="100" value="10" oninput="updateWeightDisplay()">
+          </div>
+          <div class="form-group">
+            <label>Experience Match <span class="weight-val" id="wExpVal">0.10</span></label>
+            <input type="range" class="range" id="wExp" min="0" max="100" value="10" oninput="updateWeightDisplay()">
+          </div>
+          <div class="weight-total" id="weightTotal">Total: 1.00</div>
+          <button class="btn btn-outline" onclick="reprocessJobs()" style="margin-top:12px">Re-score All Jobs</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs Page -->
+  <div class="page" id="page-logs">
+    <div class="page-header">
+      <h1>Logs</h1>
+      <div class="header-actions">
+        <button class="btn btn-outline" onclick="loadLogs()">Refresh</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <pre class="log-viewer" id="logViewer">Loading...</pre>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Job Detail Modal -->
+<div class="modal-overlay" id="jobModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle"></h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

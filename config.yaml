@@ -1,0 +1,113 @@
+# ============================================================
+# Job Scraper Configuration
+# ============================================================
+# Secrets (API keys, passwords) should be set via environment
+# variables in production. See README for details.
+# ============================================================
+
+job_search_statement: ''
+
+preferences:
+  job_titles:
+    - "Public relationships"
+    - "Media communication"
+    - "strategic communications"
+    - "project management"
+  skills:
+    - "Strategic Communications"
+    - "Policy Communications"
+    - "Media Relations"
+    - "Speechwriting"
+    - "Stakeholder Engagement"
+    - "Campaign Delivery"
+  locations:
+    - "Remote"
+    - "London, UK"
+    - "Berlin, Germany"
+    - "Thailand"
+    - "Spain"
+    - "Europe"
+  remote_preference: "onsite_ok"
+  experience_level: "mid"
+  salary_range:
+    min: 60000
+    max: 120000
+    currency: "USD"
+  excluded_companies: []
+
+scoring:
+  weights:
+    skills_match: 0.35
+    title_match: 0.25
+    location_match: 0.20
+    salary_match: 0.10
+    experience_match: 0.10
+  thresholds:
+    perfect_match: 80
+    strong_match: 60
+    worth_a_look: 40
+
+scrapers:
+  remotive:
+    enabled: true
+  arbeitnow:
+    enabled: true
+  themuse:
+    enabled: true
+    api_key: ""
+  jobicy:
+    enabled: true
+  himalayas:
+    enabled: true
+  remoteok_api:
+    enabled: true
+  workingnomads:
+    enabled: true
+  landingjobs:
+    enabled: true
+  hn_hiring:
+    enabled: true
+  rss_feeds:
+    enabled: true
+    feeds:
+      - name: "WWR All Jobs"
+        url: "https://weworkremotely.com/remote-jobs.rss"
+      - name: "ReliefWeb Communications"
+        url: "https://reliefweb.int/jobs/rss.xml?search=communications"
+      - name: "ReliefWeb Public Relations"
+        url: "https://reliefweb.int/jobs/rss.xml?search=public+relations"
+      - name: "ReliefWeb Media Relations"
+        url: "https://reliefweb.int/jobs/rss.xml?search=media+relations"
+  linkedin_rapid:
+    enabled: true
+    rapidapi_key: ""       # Set RAPIDAPI_KEY env var
+  adzuna:
+    enabled: false
+    app_id: ""             # Set ADZUNA_APP_ID env var
+    app_key: ""            # Set ADZUNA_APP_KEY env var
+    country: "gb"
+  serpapi_google:
+    enabled: false
+    api_key: ""            # Set SERPAPI_KEY env var
+
+llm:
+  enabled: true
+  api_key: ""              # Set ANTHROPIC_API_KEY env var
+  model: "claude-haiku-4-5-20251001"
+  top_n: 30
+
+email:
+  enabled: false
+  smtp_host: "smtp.gmail.com"
+  smtp_port: 587
+  smtp_user: ""
+  smtp_password: ""        # Set SMTP_PASSWORD env var
+  from_address: ""
+  to_addresses: []
+  subject_prefix: "[JobDigest]"
+
+schedule:
+  run_time: "08:00"
+
+database:
+  path: "data/jobs.db"

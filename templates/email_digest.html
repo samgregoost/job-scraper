@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; color: #333; }
+    .container { max-width: 700px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+    .header h1 { margin: 0 0 8px 0; font-size: 24px; }
+    .header p { margin: 0; opacity: 0.9; font-size: 14px; }
+    .stats { display: flex; justify-content: center; gap: 30px; padding: 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
+    .stat { text-align: center; }
+    .stat-number { font-size: 28px; font-weight: 700; color: #667eea; }
+    .stat-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+    .section { padding: 20px 30px; }
+    .section-title { font-size: 18px; font-weight: 600; margin: 0 0 15px 0; padding-bottom: 8px; border-bottom: 2px solid #667eea; }
+    .section-title.perfect { border-color: #28a745; color: #28a745; }
+    .section-title.strong { border-color: #007bff; color: #007bff; }
+    .section-title.worth { border-color: #ffc107; color: #856404; }
+    .job-card { background: #f8f9fa; border-radius: 6px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #ddd; }
+    .job-card.perfect { border-left-color: #28a745; }
+    .job-card.strong { border-left-color: #007bff; }
+    .job-card.worth { border-left-color: #ffc107; }
+    .job-title { font-size: 16px; font-weight: 600; margin: 0 0 4px 0; }
+    .job-title a { color: #333; text-decoration: none; }
+    .job-title a:hover { color: #667eea; text-decoration: underline; }
+    .job-meta { font-size: 13px; color: #666; margin: 0 0 8px 0; }
+    .job-score { display: inline-block; background: #667eea; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .job-score.high { background: #28a745; }
+    .job-score.medium { background: #007bff; }
+    .job-score.low { background: #ffc107; color: #333; }
+    .skills { margin-top: 6px; }
+    .skill-tag { display: inline-block; background: #e9ecef; color: #495057; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin: 2px; }
+    .footer { text-align: center; padding: 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; font-size: 12px; color: #999; }
+    .no-jobs { text-align: center; padding: 40px; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Your Daily Job Digest</h1>
+      <p>{{ date }}</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-number">{{ total_scraped }}</div>
+        <div class="stat-label">Jobs Scraped</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">{{ total_new }}</div>
+        <div class="stat-label">New Jobs</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">{{ total_matches }}</div>
+        <div class="stat-label">Matches</div>
+      </div>
+    </div>
+
+    {% if perfect_matches %}
+    <div class="section">
+      <h2 class="section-title perfect">&#11088; Perfect Match ({{ perfect_matches|length }})</h2>
+      {% for job in perfect_matches %}
+      <div class="job-card perfect">
+        <p class="job-title"><a href="{{ job.url }}">{{ job.title }}</a></p>
+        <p class="job-meta">{{ job.company }} &bull; {{ job.location }}
+          {% if job.salary_min %} &bull; {{ job.salary_currency }}{{ "{:,.0f}".format(job.salary_min) }}{% if job.salary_max %}-{{ "{:,.0f}".format(job.salary_max) }}{% endif %}{% endif %}
+        </p>
+        <span class="job-score high">{{ job.score }}/100</span>
+        {% if job.skill_matches %}
+        <div class="skills">
+          {% for skill in job.skill_matches.split(',') if skill.strip() %}
+          <span class="skill-tag">{{ skill.strip() }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if strong_matches %}
+    <div class="section">
+      <h2 class="section-title strong">&#128170; Strong Match ({{ strong_matches|length }})</h2>
+      {% for job in strong_matches %}
+      <div class="job-card strong">
+        <p class="job-title"><a href="{{ job.url }}">{{ job.title }}</a></p>
+        <p class="job-meta">{{ job.company }} &bull; {{ job.location }}
+          {% if job.salary_min %} &bull; {{ job.salary_currency }}{{ "{:,.0f}".format(job.salary_min) }}{% if job.salary_max %}-{{ "{:,.0f}".format(job.salary_max) }}{% endif %}{% endif %}
+        </p>
+        <span class="job-score medium">{{ job.score }}/100</span>
+        {% if job.skill_matches %}
+        <div class="skills">
+          {% for skill in job.skill_matches.split(',') if skill.strip() %}
+          <span class="skill-tag">{{ skill.strip() }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if worth_a_look %}
+    <div class="section">
+      <h2 class="section-title worth">&#128064; Worth a Look ({{ worth_a_look|length }})</h2>
+      {% for job in worth_a_look %}
+      <div class="job-card worth">
+        <p class="job-title"><a href="{{ job.url }}">{{ job.title }}</a></p>
+        <p class="job-meta">{{ job.company }} &bull; {{ job.location }}
+          {% if job.salary_min %} &bull; {{ job.salary_currency }}{{ "{:,.0f}".format(job.salary_min) }}{% if job.salary_max %}-{{ "{:,.0f}".format(job.salary_max) }}{% endif %}{% endif %}
+        </p>
+        <span class="job-score low">{{ job.score }}/100</span>
+        {% if job.skill_matches %}
+        <div class="skills">
+          {% for skill in job.skill_matches.split(',') if skill.strip() %}
+          <span class="skill-tag">{{ skill.strip() }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not perfect_matches and not strong_matches and not worth_a_look %}
+    <div class="no-jobs">
+      <p>No matching jobs found today. We'll keep looking!</p>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+      <p>Generated by Job Scraper &bull; <a href="#" style="color: #667eea;">Manage Preferences</a></p>
+    </div>
+  </div>
+</body>
+</html>
