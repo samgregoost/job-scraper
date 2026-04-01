@@ -133,16 +133,60 @@ def api_sources():
 @app.route("/api/config", methods=["GET"])
 def api_get_config():
     config = load_config()
+    # Mask secrets in the response but indicate if they're set
+    _mask_secret(config, ["llm", "api_key"], "ANTHROPIC_API_KEY")
+    _mask_secret(config, ["scrapers", "linkedin_rapid", "rapidapi_key"], "RAPIDAPI_KEY")
+    _mask_secret(config, ["scrapers", "adzuna", "app_key"], "ADZUNA_APP_KEY")
+    _mask_secret(config, ["scrapers", "serpapi_google", "api_key"], "SERPAPI_KEY")
+    _mask_secret(config, ["email", "smtp_password"], "SMTP_PASSWORD")
     return jsonify(config)
+
+
+def _mask_secret(config: dict, path: list[str], env_var: str):
+    """Show '••• (from env)' for secrets loaded from env vars."""
+    obj = config
+    for key in path[:-1]:
+        obj = obj.get(key, {})
+    final_key = path[-1]
+    val = obj.get(final_key, "")
+    if val and os.environ.get(env_var):
+        obj[final_key] = "••• (set via environment variable)"
 
 
 @app.route("/api/config", methods=["PUT"])
 def api_save_config():
     data = request.get_json()
+
+    # Preserve secrets that come from env vars — don't let the UI overwrite them
+    # with empty strings or masked placeholders
+    _preserve_secret(data, ["llm", "api_key"], "ANTHROPIC_API_KEY")
+    _preserve_secret(data, ["scrapers", "linkedin_rapid", "rapidapi_key"], "RAPIDAPI_KEY")
+    _preserve_secret(data, ["scrapers", "adzuna", "app_key"], "ADZUNA_APP_KEY")
+    _preserve_secret(data, ["scrapers", "serpapi_google", "api_key"], "SERPAPI_KEY")
+    _preserve_secret(data, ["email", "smtp_password"], "SMTP_PASSWORD")
+
     config_path = os.path.join(PROJECT_ROOT, "config.yaml")
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
     return jsonify({"ok": True})
+
+
+def _preserve_secret(data: dict, path: list[str], env_var: str):
+    """If an env var provides the secret, keep the yaml value empty so
+    the env override works on next load. Don't save masked placeholders."""
+    obj = data
+    for key in path[:-1]:
+        if key not in obj:
+            return
+        obj = obj[key]
+    final_key = path[-1]
+    val = obj.get(final_key, "")
+    # If value is masked or env var is set, keep yaml empty
+    if "•••" in str(val) or (os.environ.get(env_var) and not val):
+        obj[final_key] = ""
+    elif os.environ.get(env_var) and val == os.environ.get(env_var):
+        # Don't write the actual secret to yaml if it matches env
+        obj[final_key] = ""
 
 
 # ── API: CV ───────────────────────────────────────────────────────
