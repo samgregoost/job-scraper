@@ -560,6 +560,7 @@ def api_logs():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("RAILWAY_ENVIRONMENT") is None
-    print(f"\n  Job Scraper Dashboard")
-    print(f"  http://localhost:{port}\n")
+    print(f"\n  Neesha's Job Huntress")
+    print(f"  Ready at http://localhost:{port}")
+    print(f"  Go get 'em, Neesha!\n")
     app.run(debug=debug, host="0.0.0.0", port=port)

@@ -268,7 +268,7 @@ async function loadTopMatches() {
     const data = await api(`/api/jobs?sort_by=score&sort_dir=DESC&limit=10&min_score=${minScore}`);
     const tbody = document.getElementById('topMatchesBody');
     if (!data.jobs.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:24px">No matches yet. Run the scraper!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:24px">Nothing yet, Neesha! Hit "Go Fetch!" to start the hunt.</td></tr>';
         return;
     }
     tbody.innerHTML = data.jobs.map(j => `<tr>
@@ -311,7 +311,7 @@ async function loadJobs() {
     const tbody = document.getElementById('jobsBody');
 
     if (!data.jobs.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:32px">No jobs found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:32px">Neesha, the hunt came up empty. Try different filters!</td></tr>';
         renderPagination();
         return;
     }
@@ -569,7 +569,7 @@ async function saveConfig() {
 
     await api('/api/config', { method: 'PUT', body: config });
     configCache = config;
-    toast('Settings saved!', 'success');
+    toast('Neesha\'s brain updated!', 'success');
 }
 
 function updateWeightDisplay() {
@@ -593,7 +593,7 @@ async function loadCVStatus() {
     const extractedEl = document.getElementById('cvExtracted');
 
     if (data.files.length === 0) {
-        el.innerHTML = '<div style="color:var(--text-dim)">No CV uploaded yet. Upload your resume to improve job matching.</div>';
+        el.innerHTML = '<div style="color:var(--text-dim)">Neesha, drop your CV here so the AI knows how brilliant you are!</div>';
         extractedEl.style.display = 'none';
     } else {
         el.innerHTML = data.files.map(f => `
@@ -659,7 +659,7 @@ function addSkillToConfig(skill) {
 async function deleteCV(filename) {
     if (!confirm(`Remove ${filename}?`)) return;
     await api(`/api/cv/delete/${encodeURIComponent(filename)}`, { method: 'DELETE' });
-    toast('CV removed', 'success');
+    toast('Greatest hit removed!', 'success');
     loadCVStatus();
 }
 
@@ -713,7 +713,7 @@ async function uploadCV(input) {
 async function runPipeline() {
     try {
         await api('/api/pipeline/run', { method: 'POST' });
-        toast('Pipeline started!', 'info');
+        toast('Neesha\'s spies are on the move!', 'info');
         document.getElementById('runPipelineBtn').disabled = true;
     } catch (e) {
         toast('Failed to start pipeline', 'error');

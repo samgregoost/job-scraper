@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Job Scraper Dashboard</title>
+<title>Neesha's Job Huntress</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -11,27 +11,27 @@
 <!-- Sidebar -->
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-brand">
-    <div class="brand-icon">JS</div>
-    <span class="brand-text">Job Scraper</span>
+    <div class="brand-icon">N</div>
+    <span class="brand-text">Neesha's Job Huntress</span>
   </div>
   <ul class="nav-links">
     <li><a href="#" class="nav-link active" data-page="dashboard" onclick="showPage('dashboard')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Dashboard</a></li>
+      HQ</a></li>
     <li><a href="#" class="nav-link" data-page="jobs" onclick="showPage('jobs')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-      Jobs</a></li>
+      The Hunt</a></li>
     <li><a href="#" class="nav-link" data-page="settings" onclick="showPage('settings')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-      Settings</a></li>
+      Neesha's Brain</a></li>
     <li><a href="#" class="nav-link" data-page="logs" onclick="showPage('logs')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      Logs</a></li>
+      Receipts</a></li>
   </ul>
   <div class="sidebar-footer">
     <button class="btn btn-primary btn-block" id="runPipelineBtn" onclick="runPipeline()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      Run Scraper
+      Go Fetch!
     </button>
   </div>
 </nav>
@@ -42,7 +42,7 @@
   <!-- Dashboard Page -->
   <div class="page active" id="page-dashboard">
     <div class="page-header">
-      <h1>Dashboard</h1>
+      <h1>Neesha's Mission Control</h1>
       <div class="header-actions">
         <span class="pipeline-status" id="pipelineStatus"></span>
       </div>
@@ -50,7 +50,7 @@
 
     <!-- Score Filter -->
     <div class="score-filter-bar">
-      <label>Min Score: <strong id="minScoreLabel">0</strong></label>
+      <label>Neesha's Vibe Check: <strong id="minScoreLabel">0</strong></label>
       <input type="range" class="range" id="dashMinScore" min="0" max="90" step="5" value="0" oninput="onMinScoreChange(this.value)">
       <span class="score-filter-info" id="scoreFilterInfo"></span>
     </div>
@@ -59,27 +59,27 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-value" id="statTotal">--</div>
-        <div class="stat-label">Total Jobs</div>
+        <div class="stat-label">Jobs in the Net</div>
         <div class="stat-sub" id="statToday">-- today</div>
       </div>
       <div class="stat-card accent-green">
         <div class="stat-value" id="statPerfect">--</div>
-        <div class="stat-label">Perfect Matches</div>
+        <div class="stat-label">Soulmates</div>
         <div class="stat-sub">Score 80+</div>
       </div>
       <div class="stat-card accent-blue">
         <div class="stat-value" id="statStrong">--</div>
-        <div class="stat-label">Strong Matches</div>
+        <div class="stat-label">Hot Prospects</div>
         <div class="stat-sub">Score 60-79</div>
       </div>
       <div class="stat-card accent-yellow">
         <div class="stat-value" id="statWorth">--</div>
-        <div class="stat-label">Worth a Look</div>
+        <div class="stat-label">Maybe Maybe</div>
         <div class="stat-sub">Score 40-59</div>
       </div>
       <div class="stat-card">
         <div class="stat-value" id="statAvgScore">--</div>
-        <div class="stat-label">Avg Score</div>
+        <div class="stat-label">Avg Vibe</div>
         <div class="stat-sub" id="statSources">-- sources</div>
       </div>
     </div>
@@ -87,7 +87,7 @@
     <!-- Application Pipeline -->
     <div class="card">
       <div class="card-header">
-        Application Pipeline
+        Neesha's Job Journey
         <button class="btn btn-sm btn-outline" onclick="exportCSV('all')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export All
@@ -102,11 +102,11 @@
     <!-- Charts Row -->
     <div class="charts-row">
       <div class="card">
-        <div class="card-header">Score Distribution</div>
+        <div class="card-header">The Vibe Spectrum</div>
         <div class="card-body" id="chartScoreDist"></div>
       </div>
       <div class="card">
-        <div class="card-header">Jobs by Category</div>
+        <div class="card-header">Match Vibes</div>
         <div class="card-body" id="chartCategories"></div>
       </div>
     </div>
@@ -114,7 +114,7 @@
     <!-- Sources Table -->
     <div class="card">
       <div class="card-header">
-        Scraper Sources
+        Neesha's Spies
         <span class="card-link" id="sourcesTotal"></span>
       </div>
       <div class="card-body no-pad">
@@ -130,8 +130,8 @@
     <!-- Top Matches -->
     <div class="card">
       <div class="card-header">
-        Top Matches
-        <a href="#" class="card-link" onclick="showPage('jobs'); return false;">View All</a>
+        Neesha's Top Picks
+        <a href="#" class="card-link" onclick="showPage('jobs'); return false;">See All Catches</a>
       </div>
       <div class="card-body no-pad">
         <table class="table" id="topMatchesTable">
@@ -147,7 +147,7 @@
   <!-- Jobs Page -->
   <div class="page" id="page-jobs">
     <div class="page-header">
-      <h1>Jobs</h1>
+      <h1>The Hunt</h1>
       <div class="header-actions">
         <button class="btn btn-outline" onclick="exportCSV()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -217,7 +217,7 @@
   <!-- Settings Page -->
   <div class="page" id="page-settings">
     <div class="page-header">
-      <h1>Settings</h1>
+      <h1>Neesha's Brain</h1>
       <div class="header-actions">
         <button class="btn btn-outline" onclick="loadConfig()">Reset</button>
         <button class="btn btn-primary" onclick="saveConfig()">Save Settings</button>
@@ -227,19 +227,19 @@
     <div class="settings-grid">
       <!-- What I'm looking for -->
       <div class="card" style="grid-column: 1 / -1;">
-        <div class="card-header">What I'm Looking For</div>
+        <div class="card-header">Neesha's Dream Job Manifesto</div>
         <div class="card-body">
           <div class="form-group">
-            <label>Describe your ideal job in your own words</label>
-            <textarea class="input search-statement" id="cfgSearchStatement" rows="4" placeholder="Example: I'm looking for a mid-senior communications or PR role in Europe, ideally in the sustainability or international development space. I want to lead campaigns, manage media relationships, and shape public narratives. Flexible or remote work is important to me. I'm open to NGOs, think tanks, or progressive companies."></textarea>
-            <small style="color:var(--text-dim);display:block;margin-top:6px">This is sent directly to AI matching as your primary intent. Be specific about industry, culture, work style, deal-breakers, or anything that structured fields can't capture.</small>
+            <label>Tell the universe (and our AI) what you really want</label>
+            <textarea class="input search-statement" id="cfgSearchStatement" rows="4" placeholder="Dear AI matchmaker: I'm looking for a mid-senior communications or PR role in Europe, ideally in the sustainability or international development space. I want to lead campaigns, manage media relationships, and shape public narratives. Flexible or remote work is important to me. I'm open to NGOs, think tanks, or progressive companies. No crypto bros please."></textarea>
+            <small style="color:var(--text-dim);display:block;margin-top:6px">This is Neesha's secret weapon. The AI reads this as your #1 signal. Be specific about industry, culture, deal-breakers, vibes. The more honest, the better the matches.</small>
           </div>
         </div>
       </div>
 
       <!-- Preferences -->
       <div class="card">
-        <div class="card-header">Job Preferences</div>
+        <div class="card-header">Neesha's Wishlist</div>
         <div class="card-body">
           <div class="form-group">
             <label>Job Titles (one per line)</label>
@@ -291,7 +291,7 @@
 
       <!-- CV Upload -->
       <div class="card">
-        <div class="card-header">CV / Resume</div>
+        <div class="card-header">Neesha's Greatest Hits (CV)</div>
         <div class="card-body">
           <div class="cv-dropzone" id="cvDropzone"
                onclick="document.getElementById('cvFileInput').click()"
@@ -321,13 +321,13 @@
 
       <!-- Scrapers -->
       <div class="card">
-        <div class="card-header">Scraper Sources</div>
+        <div class="card-header">The Spy Network</div>
         <div class="card-body" id="scraperToggles"></div>
       </div>
 
       <!-- API Keys -->
       <div class="card">
-        <div class="card-header">API Keys (for premium sources)</div>
+        <div class="card-header">Secret Keys (VIP Access)</div>
         <div class="card-body">
           <div class="form-group">
             <label>LinkedIn RapidAPI Key</label>
@@ -353,7 +353,7 @@
 
       <!-- LLM Matching -->
       <div class="card">
-        <div class="card-header">LLM Matching (Claude AI)</div>
+        <div class="card-header">Neesha's AI Matchmaker</div>
         <div class="card-body">
           <div class="form-group">
             <label class="toggle-label">
@@ -386,7 +386,7 @@
 
       <!-- Email -->
       <div class="card">
-        <div class="card-header">Email Settings</div>
+        <div class="card-header">Neesha's Morning Briefing</div>
         <div class="card-body">
           <div class="form-group">
             <label class="toggle-label">
@@ -430,7 +430,7 @@
 
       <!-- Scoring Weights -->
       <div class="card">
-        <div class="card-header">Scoring Weights</div>
+        <div class="card-header">The Secret Sauce</div>
         <div class="card-body">
           <div class="form-group">
             <label>Skills Match <span class="weight-val" id="wSkillsVal">0.35</span></label>
@@ -462,7 +462,7 @@
   <!-- Logs Page -->
   <div class="page" id="page-logs">
     <div class="page-header">
-      <h1>Logs</h1>
+      <h1>The Receipts</h1>
       <div class="header-actions">
         <button class="btn btn-outline" onclick="loadLogs()">Refresh</button>
       </div>

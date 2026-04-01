@@ -82,7 +82,7 @@ def send_digest(
 
 
 def _build_plain_text(perfect, strong, worth) -> str:
-    lines = ["=== Daily Job Digest ===\n"]
+    lines = ["=== Neesha's Daily Catch ===\n"]
 
     for label, jobs in [("PERFECT MATCH", perfect), ("STRONG MATCH", strong), ("WORTH A LOOK", worth)]:
         if jobs:
@@ -96,7 +96,7 @@ def _build_plain_text(perfect, strong, worth) -> str:
 
 def _print_summary(perfect, strong, worth):
     print("\n" + "=" * 60)
-    print("  DAILY JOB DIGEST")
+    print("  NEESHA'S DAILY CATCH")
     print("=" * 60)
 
     for label, jobs in [
@@ -114,6 +114,6 @@ def _print_summary(perfect, strong, worth):
                 print()
 
     if not perfect and not strong and not worth:
-        print("\n  No matching jobs found today.\n")
+        print("\n  Nothing caught Neesha's eye today. The spies will try harder tomorrow!\n")
 
     print("=" * 60)
