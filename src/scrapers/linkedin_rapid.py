@@ -37,6 +37,7 @@ class LinkedInRapidScraper(BaseScraper):
             location = locations[0] if locations else ""
 
         for query in queries:
+          for page_num in range(1, 4):  # 3 pages x 10 = up to 30 per query
             try:
                 headers = {
                     "X-RapidAPI-Key": api_key,
@@ -46,14 +47,18 @@ class LinkedInRapidScraper(BaseScraper):
                 payload = {
                     "search_terms": query,
                     "location": location,
-                    "page": "1",
+                    "page": str(page_num),
                 }
 
                 resp = requests.post(API_URL, json=payload, headers=headers, timeout=30)
                 resp.raise_for_status()
                 data = resp.json()
+                items = data if isinstance(data, list) else []
 
-                for item in data if isinstance(data, list) else []:
+                if not items:
+                    break
+
+                for item in items:
                     url = item.get("linkedin_job_url_cleaned", "")
 
                     # Try to fetch description from the public LinkedIn page
@@ -74,12 +79,11 @@ class LinkedInRapidScraper(BaseScraper):
                         )
                     )
 
-                count = len(data) if isinstance(data, list) else 0
-                logger.info(f"LinkedIn RapidAPI: fetched {count} jobs for '{query}'")
+                logger.info(f"LinkedIn RapidAPI: fetched {len(items)} jobs for '{query}' (page {page_num})")
+                time.sleep(2)
             except Exception as e:
-                logger.error(f"LinkedIn RapidAPI scrape failed for '{query}': {e}")
-
-            time.sleep(2)
+                logger.error(f"LinkedIn RapidAPI scrape failed for '{query}' page {page_num}: {e}")
+                break
 
         return jobs
 

@@ -29,11 +29,13 @@ class SerpApiGoogleScraper(BaseScraper):
 
         for query in queries:
             location = locations[0] if locations else ""
+          for start in range(0, 30, 10):  # 3 pages of 10 = up to 30 per query
             try:
                 params = {
                     "engine": "google_jobs",
                     "q": query,
                     "api_key": api_key,
+                    "start": start,
                 }
                 if location and location.lower() != "remote":
                     params["location"] = location
@@ -41,8 +43,12 @@ class SerpApiGoogleScraper(BaseScraper):
                 resp = requests.get(API_URL, params=params, timeout=30)
                 resp.raise_for_status()
                 data = resp.json()
+                results = data.get("jobs_results", [])
 
-                for item in data.get("jobs_results", []):
+                if not results:
+                    break
+
+                for item in results:
                     ext_id = item.get("job_id", item.get("title", "") + item.get("company_name", ""))
                     description = item.get("description", "")
 
@@ -69,10 +75,10 @@ class SerpApiGoogleScraper(BaseScraper):
                         )
                     )
 
-                logger.info(f"SerpAPI: fetched {len(data.get('jobs_results', []))} jobs for '{query}'")
+                logger.info(f"SerpAPI: fetched {len(results)} jobs for '{query}' (start={start})")
+                time.sleep(2)
             except Exception as e:
-                logger.error(f"SerpAPI scrape failed for '{query}': {e}")
-
-            time.sleep(2)
+                logger.error(f"SerpAPI scrape failed for '{query}' start={start}: {e}")
+                break
 
         return jobs

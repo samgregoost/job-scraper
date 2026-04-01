@@ -28,8 +28,9 @@ class AdzunaScraper(BaseScraper):
         queries = self._build_search_queries()
 
         for query in queries:
+          for page in range(1, 4):  # 3 pages x 50 = up to 150 per query
             try:
-                url = f"https://api.adzuna.com/v1/api/jobs/{country}/search/1"
+                url = f"https://api.adzuna.com/v1/api/jobs/{country}/search/{page}"
                 resp = requests.get(
                     url,
                     params={
@@ -43,8 +44,12 @@ class AdzunaScraper(BaseScraper):
                 )
                 resp.raise_for_status()
                 data = resp.json()
+                results = data.get("results", [])
 
-                for item in data.get("results", []):
+                if not results:
+                    break
+
+                for item in results:
                     salary_min = item.get("salary_min")
                     salary_max = item.get("salary_max")
 
@@ -67,11 +72,11 @@ class AdzunaScraper(BaseScraper):
                         )
                     )
 
-                logger.info(f"Adzuna: fetched {len(data.get('results', []))} jobs for '{query}'")
+                logger.info(f"Adzuna: fetched {len(results)} jobs for '{query}' (page {page})")
+                time.sleep(1)
             except Exception as e:
-                logger.error(f"Adzuna scrape failed for '{query}': {e}")
-
-            time.sleep(1)
+                logger.error(f"Adzuna scrape failed for '{query}' page {page}: {e}")
+                break
 
         return jobs
 

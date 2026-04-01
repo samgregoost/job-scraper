@@ -51,9 +51,9 @@ async function loadDashboard() {
         // Score filter info
         const infoEl = document.getElementById('scoreFilterInfo');
         if (dashMinScore > 0) {
-            infoEl.textContent = `Showing ${stats.total_jobs} of ${stats.total_jobs_unfiltered} jobs`;
+            infoEl.textContent = `Neesha sees ${stats.total_jobs} of ${stats.total_jobs_unfiltered} catches`;
         } else {
-            infoEl.textContent = `Showing all ${stats.total_jobs} jobs`;
+            infoEl.textContent = `All ${stats.total_jobs} catches in Neesha's net`;
         }
 
         updatePipelineStatus(stats);
@@ -107,7 +107,7 @@ function renderScoreDistribution(stats) {
     const dist = stats.score_distribution || {};
     const el = document.getElementById('chartScoreDist');
     if (!dist || Object.keys(dist).length === 0) {
-        el.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px">No data yet</div>';
+        el.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px">Neesha's spies haven't reported in yet</div>';
         return;
     }
     const max = Math.max(...Object.values(dist), 1);
@@ -192,7 +192,7 @@ async function renderSourcesTable(stats) {
     // Map RSS config to actual RSS source keys
     const rssEnabled = scraperConfig.rss_feeds?.enabled || false;
 
-    document.getElementById('sourcesTotal').textContent = `${total} total jobs from ${Object.keys(bySource).length} sources`;
+    document.getElementById('sourcesTotal').textContent = `${total} catches from ${Object.keys(bySource).length} spies`;
 
     const tbody = document.getElementById('sourcesBody');
     const rows = [];
@@ -248,7 +248,7 @@ async function renderSourcesTable(stats) {
 function renderBarChart(containerId, data, defaultColor, colorMap) {
     const el = document.getElementById(containerId);
     if (!data || Object.keys(data).length === 0) {
-        el.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px">No data yet</div>';
+        el.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px">Neesha's spies haven't reported in yet</div>';
         return;
     }
     const max = Math.max(...Object.values(data), 1);
@@ -356,7 +356,7 @@ function renderPagination() {
     if (totalPages <= 1) { el.innerHTML = ''; return; }
 
     let html = `<button class="page-btn" onclick="goToPage(${jobsPage - 1})" ${jobsPage === 0 ? 'disabled' : ''}>Prev</button>`;
-    html += `<span class="page-info">Page ${jobsPage + 1} of ${totalPages} (${jobsTotal} jobs)</span>`;
+    html += `<span class="page-info">Page ${jobsPage + 1} of ${totalPages} (${jobsTotal} catches)</span>`;
     html += `<button class="page-btn" onclick="goToPage(${jobsPage + 1})" ${jobsPage >= totalPages - 1 ? 'disabled' : ''}>Next</button>`;
     el.innerHTML = html;
 }
