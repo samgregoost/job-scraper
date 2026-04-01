@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 
@@ -93,6 +94,14 @@ def score_jobs(
         final_score = min(round(composite, 1), 100.0)
         category = _categorize(final_score, thresholds)
 
+        breakdown = json.dumps({
+            "skills": round(skills_score, 1),
+            "title": round(title_score, 1),
+            "location": round(loc_score, 1),
+            "salary": round(sal_score, 1),
+            "experience": round(exp_score, 1),
+        })
+
         scored.append(
             ScoredJob(
                 job=job,
@@ -102,6 +111,7 @@ def score_jobs(
                 title_similarity=title_score,
                 location_match=loc_score > 50,
                 salary_in_range=sal_score > 50 if job.salary_min else None,
+                score_breakdown=breakdown,
             )
         )
 

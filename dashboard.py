@@ -117,12 +117,46 @@ def api_update_status(job_id):
     return jsonify({"ok": True})
 
 
+@app.route("/api/jobs/<int:job_id>/notes", methods=["PUT"])
+def api_update_notes(job_id):
+    data = request.get_json()
+    db = get_db()
+    db.update_notes(job_id, data.get("notes", ""))
+    db.close()
+    return jsonify({"ok": True})
+
+
 @app.route("/api/jobs/<int:job_id>", methods=["DELETE"])
 def api_delete_job(job_id):
     db = get_db()
     db.delete_job(job_id)
     db.close()
     return jsonify({"ok": True})
+
+
+@app.route("/api/jobs/bulk/status", methods=["PUT"])
+def api_bulk_status():
+    data = request.get_json()
+    job_ids = data.get("job_ids", [])
+    status = data.get("status", "new")
+    if not job_ids:
+        return jsonify({"error": "No jobs selected"}), 400
+    db = get_db()
+    db.bulk_update_status(job_ids, status)
+    db.close()
+    return jsonify({"ok": True, "count": len(job_ids)})
+
+
+@app.route("/api/jobs/bulk", methods=["DELETE"])
+def api_bulk_delete():
+    data = request.get_json()
+    job_ids = data.get("job_ids", [])
+    if not job_ids:
+        return jsonify({"error": "No jobs selected"}), 400
+    db = get_db()
+    db.bulk_delete(job_ids)
+    db.close()
+    return jsonify({"ok": True, "count": len(job_ids)})
 
 
 @app.route("/api/sources")

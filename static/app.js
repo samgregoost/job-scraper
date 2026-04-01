@@ -6,6 +6,7 @@ const JOBS_PER_PAGE = 50;
 let configCache = null;
 let pollTimer = null;
 let dashMinScore = 0;
+let selectedJobs = new Set();
 
 // ── Init ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -273,7 +274,7 @@ async function loadTopMatches() {
     }
     tbody.innerHTML = data.jobs.map(j => `<tr>
         <td>${scoreBadge(j.score, j.category)}</td>
-        <td><a href="#" onclick="showJobDetail(${j.id}); return false;">${esc(j.title)}</a></td>
+        <td><a href="#" onclick="showJobDetail(${j.id}); return false;">${esc(j.title)}</a> ${freshnessBadge(j)}</td>
         <td>${esc(j.company)}</td>
         <td>${esc(j.location)}</td>
         <td><span class="skill-tag">${esc(j.source)}</span></td>
@@ -311,16 +312,20 @@ async function loadJobs() {
     const tbody = document.getElementById('jobsBody');
 
     if (!data.jobs.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:32px">Neesha, the hunt came up empty. Try different filters!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-dim);padding:32px">Neesha, the hunt came up empty. Try different filters!</td></tr>';
         renderPagination();
         return;
     }
 
+    currentPageJobIds = data.jobs.map(j => j.id);
+    selectedRowIndex = -1;
+
     tbody.innerHTML = data.jobs.map(j => {
         const skills = j.skill_matches ? j.skill_matches.split(',').filter(s => s.trim()).slice(0, 4) : [];
         return `<tr>
+            <td><input type="checkbox" class="job-checkbox" data-id="${j.id}" onchange="toggleJobSelect(${j.id}, this.checked)"></td>
             <td>${scoreBadge(j.score, j.category)}</td>
-            <td><a href="#" onclick="showJobDetail(${j.id}); return false;">${esc(j.title)}</a></td>
+            <td><a href="#" onclick="showJobDetail(${j.id}); return false;">${esc(j.title)}</a> ${freshnessBadge(j)}</td>
             <td>${esc(j.company)}</td>
             <td>${esc(j.location)}${j.remote ? ' <span class="skill-tag">Remote</span>' : ''}</td>
             <td><div class="skill-tags">${skills.map(s => `<span class="skill-tag">${esc(s.trim())}</span>`).join('')}</div></td>
@@ -387,12 +392,36 @@ async function showJobDetail(id) {
     document.getElementById('modalTitle').textContent = job.title;
     const skills = job.skill_matches ? job.skill_matches.split(',').filter(s => s.trim()) : [];
 
+    // Build score breakdown HTML
+    let breakdownHtml = '';
+    if (job.score_breakdown) {
+        try {
+            const bd = typeof job.score_breakdown === 'string' ? JSON.parse(job.score_breakdown) : job.score_breakdown;
+            const labels = {skills: 'Skills', title: 'Title', location: 'Location', salary: 'Salary', experience: 'Experience'};
+            breakdownHtml = '<div class="score-breakdown-bars">' +
+                Object.entries(labels).map(([key, label]) => {
+                    const val = bd[key] || 0;
+                    const cls = val >= 70 ? 'sb-high' : val >= 40 ? 'sb-mid' : 'sb-low';
+                    return `<div class="sb-row"><span class="sb-label">${label}</span><div class="sb-track"><div class="sb-fill ${cls}" style="width:${val}%"></div></div><span class="sb-val">${Math.round(val)}</span></div>`;
+                }).join('') + '</div>';
+        } catch (e) {}
+    }
+
+    // Red flags
+    const redFlags = job.red_flags ? job.red_flags.split(',').map(f => f.trim()).filter(f => f) : [];
+    const redFlagsHtml = redFlags.length ? `<div class="detail-row"><div class="detail-label">Red Flags</div><div class="detail-value"><div class="skill-tags">${redFlags.map(f => `<span class="skill-tag red-flag-tag">${esc(f)}</span>`).join('')}</div></div></div>` : '';
+
+    // Applied date
+    const appliedInfo = job.applied_date ? `<span style="font-size:12px;color:var(--text-dim);margin-left:8px">Applied ${timeAgo(job.applied_date)}</span>` : '';
+
     document.getElementById('modalBody').innerHTML = `
-        <div class="detail-row"><div class="detail-label">Company</div><div class="detail-value">${esc(job.company)}</div></div>
+        <div class="detail-row"><div class="detail-label">Company</div><div class="detail-value">${esc(job.company)} ${freshnessBadge(job)}</div></div>
         <div class="detail-row"><div class="detail-label">Location</div><div class="detail-value">${esc(job.location)}${job.remote ? ' (Remote)' : ''}</div></div>
         <div class="detail-row"><div class="detail-label">Source</div><div class="detail-value"><span class="skill-tag">${esc(job.source)}</span></div></div>
         <div class="detail-row"><div class="detail-label">Score</div><div class="detail-value">${scoreBadge(job.score, job.category)} <span style="font-size:12px;color:var(--text-dim);margin-left:8px">${job.llm_reasoning ? 'AI scored' : 'Rule-based'}</span></div></div>
+        ${breakdownHtml}
         ${job.llm_reasoning ? `<div class="detail-row"><div class="detail-label">AI Analysis</div><div class="detail-value"><div class="llm-reasoning">${esc(job.llm_reasoning)}</div></div></div>` : ''}
+        ${redFlagsHtml}
         ${job.salary_min ? `<div class="detail-row"><div class="detail-label">Salary</div><div class="detail-value">${job.salary_currency || ''}${Number(job.salary_min).toLocaleString()}${job.salary_max ? ' - ' + Number(job.salary_max).toLocaleString() : ''}</div></div>` : ''}
         <div class="detail-row"><div class="detail-label">Skills</div><div class="detail-value"><div class="skill-tags">${skills.map(s => `<span class="skill-tag">${esc(s.trim())}</span>`).join('') || 'None detected'}</div></div></div>
         <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">
@@ -400,16 +429,23 @@ async function showJobDetail(id) {
                 ${['new','saved','applied','interviewing','rejected','offer'].map(s =>
                     `<option value="${s}" ${job.application_status === s ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
                 ).join('')}
-            </select>
+            </select>${appliedInfo}
         </div></div>
         <div class="detail-row"><div class="detail-label">Scraped</div><div class="detail-value">${new Date(job.scraped_at).toLocaleString()}</div></div>
         <div class="detail-row"><div class="detail-label">Link</div><div class="detail-value"><a href="${esc(job.url)}" target="_blank">${esc(job.url)}</a></div></div>
+        <div style="margin-top:16px"><div class="detail-label" style="margin-bottom:8px">Neesha's Notes</div>
+        <textarea class="input notes-textarea" placeholder="Jot down thoughts, recruiter info, follow-up dates..." onblur="saveNotes(${job.id}, this.value)">${esc(job.notes || '')}</textarea></div>
         <div style="margin-top:16px"><div class="detail-label" style="margin-bottom:8px">Description</div>
         <div class="desc-text">${formatDescription(job.description)}</div></div>
         <div style="margin-top:16px;text-align:right"><a href="${esc(job.url)}" target="_blank" class="btn btn-primary">Apply Now</a></div>
     `;
 
     document.getElementById('jobModal').classList.add('active');
+}
+
+async function saveNotes(jobId, notes) {
+    await api(`/api/jobs/${jobId}/notes`, { method: 'PUT', body: { notes } });
+    toast('Notes saved!', 'success');
 }
 
 function closeModal() {
@@ -848,6 +884,36 @@ function formatDescription(desc) {
     return esc(text);
 }
 
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diff = Math.floor((now - date) / 1000);
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        const days = Math.floor(diff / 86400);
+        if (days === 1) return '1d ago';
+        if (days < 7) return `${days}d ago`;
+        if (days < 30) return `${Math.floor(days / 7)}w ago`;
+        return `${Math.floor(days / 30)}mo ago`;
+    } catch (e) { return ''; }
+}
+
+function freshnessBadge(job) {
+    const dateStr = job.posted_date || job.scraped_at;
+    const ago = timeAgo(dateStr);
+    if (!ago) return '';
+    try {
+        const date = new Date(dateStr);
+        const days = Math.floor((new Date() - date) / 86400000);
+        let cls = 'fresh-old';
+        if (days <= 2) cls = 'fresh-new';
+        else if (days <= 7) cls = 'fresh-recent';
+        return `<span class="freshness ${cls}">${ago}</span>`;
+    } catch (e) { return ''; }
+}
+
 function formatSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
@@ -873,4 +939,141 @@ function debounce(fn, ms) {
         clearTimeout(_debounceTimers[fn.name]);
         _debounceTimers[fn.name] = setTimeout(() => fn(...args), ms);
     };
+}
+
+// ── Bulk Actions ─────────────────────────────────
+function toggleJobSelect(id, checked) {
+    if (checked) selectedJobs.add(id); else selectedJobs.delete(id);
+    updateBulkBar();
+}
+
+function toggleSelectAll(checked) {
+    document.querySelectorAll('.job-checkbox').forEach(cb => {
+        cb.checked = checked;
+        const id = parseInt(cb.dataset.id);
+        if (checked) selectedJobs.add(id); else selectedJobs.delete(id);
+    });
+    updateBulkBar();
+}
+
+function updateBulkBar() {
+    const bar = document.getElementById('bulkBar');
+    if (selectedJobs.size > 0) {
+        bar.style.display = 'flex';
+        document.getElementById('bulkCount').textContent = `${selectedJobs.size} selected`;
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+function clearSelection() {
+    selectedJobs.clear();
+    document.querySelectorAll('.job-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('selectAllJobs').checked = false;
+    updateBulkBar();
+}
+
+async function bulkSetStatus() {
+    const status = document.getElementById('bulkStatus').value;
+    const ids = [...selectedJobs];
+    await api('/api/jobs/bulk/status', { method: 'PUT', body: { job_ids: ids, status } });
+    toast(`${ids.length} jobs set to ${status}`, 'success');
+    clearSelection();
+    loadJobs();
+}
+
+async function bulkDelete() {
+    const ids = [...selectedJobs];
+    if (!confirm(`Delete ${ids.length} jobs?`)) return;
+    await api('/api/jobs/bulk', { method: 'DELETE', body: { job_ids: ids } });
+    toast(`${ids.length} jobs deleted`, 'success');
+    clearSelection();
+    loadJobs();
+}
+
+// ── Keyboard Shortcuts ───────────────────────────
+let selectedRowIndex = -1;
+let currentPageJobIds = [];
+
+document.addEventListener('keydown', (e) => {
+    // Don't intercept when typing in inputs
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (currentPage !== 'jobs' && e.key !== '?') return;
+
+    const tbody = document.getElementById('jobsBody');
+    const rows = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+
+    switch (e.key) {
+        case 'j':
+        case 'ArrowDown':
+            e.preventDefault();
+            selectedRowIndex = Math.min(selectedRowIndex + 1, rows.length - 1);
+            highlightRow(rows);
+            break;
+        case 'k':
+        case 'ArrowUp':
+            e.preventDefault();
+            selectedRowIndex = Math.max(selectedRowIndex - 1, 0);
+            highlightRow(rows);
+            break;
+        case 'Enter':
+        case 'o':
+            if (selectedRowIndex >= 0 && currentPageJobIds[selectedRowIndex]) {
+                showJobDetail(currentPageJobIds[selectedRowIndex]);
+            }
+            break;
+        case 's':
+            if (selectedRowIndex >= 0 && currentPageJobIds[selectedRowIndex]) {
+                updateJobStatus(currentPageJobIds[selectedRowIndex], 'saved');
+                toast('Saved!', 'success');
+            }
+            break;
+        case 'a':
+            if (selectedRowIndex >= 0 && currentPageJobIds[selectedRowIndex]) {
+                updateJobStatus(currentPageJobIds[selectedRowIndex], 'applied');
+                toast('Marked as applied!', 'success');
+            }
+            break;
+        case 'x':
+            if (selectedRowIndex >= 0 && currentPageJobIds[selectedRowIndex]) {
+                deleteJob(currentPageJobIds[selectedRowIndex]);
+            }
+            break;
+        case '?':
+            toggleShortcutHelp();
+            break;
+    }
+});
+
+function highlightRow(rows) {
+    rows.forEach(r => r.classList.remove('kbd-highlight'));
+    if (rows[selectedRowIndex]) {
+        rows[selectedRowIndex].classList.add('kbd-highlight');
+        rows[selectedRowIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+}
+
+function toggleShortcutHelp() {
+    let el = document.getElementById('shortcutHelp');
+    if (el) { el.remove(); return; }
+    el = document.createElement('div');
+    el.id = 'shortcutHelp';
+    el.className = 'shortcut-help-overlay';
+    el.onclick = () => el.remove();
+    el.innerHTML = `<div class="shortcut-help" onclick="event.stopPropagation()">
+        <h3>Keyboard Shortcuts</h3>
+        <div class="shortcut-grid">
+            <kbd>j</kbd><span>Next job</span>
+            <kbd>k</kbd><span>Previous job</span>
+            <kbd>Enter</kbd><span>Open details</span>
+            <kbd>s</kbd><span>Save job</span>
+            <kbd>a</kbd><span>Mark applied</span>
+            <kbd>x</kbd><span>Delete job</span>
+            <kbd>?</kbd><span>This help</span>
+            <kbd>Esc</kbd><span>Close modal</span>
+        </div>
+        <p style="margin-top:12px;color:var(--text-dim);font-size:12px">Only active on The Hunt page</p>
+    </div>`;
+    document.body.appendChild(el);
 }

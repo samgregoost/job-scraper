@@ -29,3 +29,5 @@ class ScoredJob:
     location_match: bool = False
     salary_in_range: bool | None = None
     llm_reasoning: str = ""  # Claude's explanation for the score
+    score_breakdown: str = ""  # JSON: {skills, title, location, salary, experience}
+    red_flags: str = ""  # Concerns from LLM analysis

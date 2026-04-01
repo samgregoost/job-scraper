@@ -180,9 +180,8 @@ Return ONLY valid JSON array, no other text."""
         score = max(0, min(100, score))
 
         reasoning = result.get("reasoning", "")
-        red_flags = result.get("red_flags", "")
-        if red_flags:
-            reasoning += f" Red flags: {red_flags}"
+        red_flags_raw = result.get("red_flags", "")
+        red_flags_str = red_flags_raw if isinstance(red_flags_raw, str) else ", ".join(red_flags_raw) if red_flags_raw else ""
 
         matched = result.get("matched_skills", [])
         if isinstance(matched, str):
@@ -200,6 +199,7 @@ Return ONLY valid JSON array, no other text."""
                 location_match="remote" in job.location.lower() or job.remote,
                 salary_in_range=None,
                 llm_reasoning=reasoning,
+                red_flags=red_flags_str,
             )
         )
 

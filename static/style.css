@@ -124,6 +124,12 @@ a:hover { color: var(--primary-hover); }
 .card-body { padding: 20px; }
 .card-body.no-pad { padding: 0; }
 
+/* ── Freshness Badge ──────────────────────────────── */
+.freshness { font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-left: 6px; font-weight: 600; vertical-align: middle; }
+.fresh-new { background: var(--green-bg); color: var(--green); }
+.fresh-recent { background: var(--yellow-bg); color: var(--yellow); }
+.fresh-old { background: var(--bg); color: var(--text-dim); }
+
 /* ── Score Filter Bar ─────────────────────────────── */
 .score-filter-bar {
   display: flex; align-items: center; gap: 16px;
@@ -389,6 +395,41 @@ textarea.input { resize: vertical; }
 }
 .pipeline-status.running { background: var(--primary-bg); border-color: var(--primary); color: var(--primary); animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+/* ── Score Breakdown Bars ────────────────────────── */
+.score-breakdown-bars { padding: 8px 0 8px 112px; display: flex; flex-direction: column; gap: 4px; }
+.sb-row { display: flex; align-items: center; gap: 8px; }
+.sb-label { width: 70px; font-size: 11px; color: var(--text-dim); text-align: right; }
+.sb-track { flex: 1; height: 14px; background: var(--bg); border-radius: 3px; overflow: hidden; max-width: 200px; }
+.sb-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+.sb-fill.sb-high { background: var(--green); }
+.sb-fill.sb-mid { background: var(--yellow); }
+.sb-fill.sb-low { background: var(--red); }
+.sb-val { font-size: 11px; font-weight: 700; color: var(--text-muted); width: 24px; }
+
+/* ── Red Flag Tags ───────────────────────────────── */
+.red-flag-tag { background: var(--red-bg) !important; color: var(--red) !important; }
+
+/* ── Notes Textarea ──────────────────────────────── */
+.notes-textarea { min-height: 60px; font-size: 13px; line-height: 1.5; resize: vertical; }
+
+/* ── Bulk Action Bar ─────────────────────────────── */
+.bulk-bar {
+  position: fixed; bottom: 0; left: var(--sidebar-w); right: 0;
+  background: var(--bg-card); border-top: 2px solid var(--primary);
+  padding: 12px 24px; display: flex; align-items: center; gap: 12px;
+  z-index: 500; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+}
+.bulk-bar span { font-weight: 600; font-size: 13px; color: var(--primary); margin-right: auto; }
+
+/* ── Keyboard Navigation ─────────────────────────── */
+tr.kbd-highlight td { background: var(--primary-bg) !important; border-left: 3px solid var(--primary); }
+.shortcut-help-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+.shortcut-help { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 32px; max-width: 360px; }
+.shortcut-help h3 { margin: 0 0 16px 0; font-size: 16px; }
+.shortcut-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; align-items: center; }
+.shortcut-grid kbd { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; font-family: monospace; font-size: 13px; font-weight: 700; color: var(--primary); min-width: 32px; text-align: center; }
+.shortcut-grid span { font-size: 13px; color: var(--text-muted); }
 
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 900px) {

@@ -42,11 +42,19 @@ class Database:
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
-        # Migrate: add llm_reasoning column if missing
-        try:
-            self.conn.execute("SELECT llm_reasoning FROM jobs LIMIT 1")
-        except sqlite3.OperationalError:
-            self.conn.execute("ALTER TABLE jobs ADD COLUMN llm_reasoning TEXT")
+        # Migrations: add columns if missing
+        for col, coltype in [
+            ("llm_reasoning", "TEXT"),
+            ("notes", "TEXT DEFAULT ''"),
+            ("applied_date", "TEXT"),
+            ("status_changed_at", "TEXT"),
+            ("score_breakdown", "TEXT"),
+            ("red_flags", "TEXT DEFAULT ''"),
+        ]:
+            try:
+                self.conn.execute(f"SELECT {col} FROM jobs LIMIT 1")
+            except sqlite3.OperationalError:
+                self.conn.execute(f"ALTER TABLE jobs ADD COLUMN {col} {coltype}")
         self.conn.commit()
 
     def insert_jobs(self, jobs: list[Job]) -> list[Job]:
@@ -89,13 +97,16 @@ class Database:
     def update_scores(self, scored_jobs: list[ScoredJob]):
         for sj in scored_jobs:
             self.conn.execute(
-                """UPDATE jobs SET score = ?, category = ?, skill_matches = ?, llm_reasoning = ?
+                """UPDATE jobs SET score = ?, category = ?, skill_matches = ?,
+                   llm_reasoning = ?, score_breakdown = ?, red_flags = ?
                    WHERE source = ? AND external_id = ?""",
                 (
                     sj.score,
                     sj.category,
                     ",".join(sj.skill_matches),
                     sj.llm_reasoning,
+                    sj.score_breakdown,
+                    sj.red_flags,
                     sj.job.source,
                     sj.job.external_id,
                 ),
@@ -303,9 +314,46 @@ class Database:
         return stats
 
     def update_application_status(self, job_id: int, status: str):
-        self.conn.execute(
-            "UPDATE jobs SET application_status = ? WHERE id = ?", (status, job_id)
-        )
+        now = datetime.now().isoformat()
+        # Auto-set applied_date when moving to "applied"
+        if status == "applied":
+            self.conn.execute(
+                """UPDATE jobs SET application_status = ?, status_changed_at = ?,
+                   applied_date = COALESCE(applied_date, ?)
+                   WHERE id = ?""",
+                (status, now, now, job_id),
+            )
+        else:
+            self.conn.execute(
+                "UPDATE jobs SET application_status = ?, status_changed_at = ? WHERE id = ?",
+                (status, now, job_id),
+            )
+        self.conn.commit()
+
+    def update_notes(self, job_id: int, notes: str):
+        self.conn.execute("UPDATE jobs SET notes = ? WHERE id = ?", (notes, job_id))
+        self.conn.commit()
+
+    def bulk_update_status(self, job_ids: list[int], status: str):
+        now = datetime.now().isoformat()
+        placeholders = ",".join("?" * len(job_ids))
+        if status == "applied":
+            self.conn.execute(
+                f"""UPDATE jobs SET application_status = ?, status_changed_at = ?,
+                    applied_date = COALESCE(applied_date, ?)
+                    WHERE id IN ({placeholders})""",
+                [status, now, now] + job_ids,
+            )
+        else:
+            self.conn.execute(
+                f"UPDATE jobs SET application_status = ?, status_changed_at = ? WHERE id IN ({placeholders})",
+                [status, now] + job_ids,
+            )
+        self.conn.commit()
+
+    def bulk_delete(self, job_ids: list[int]):
+        placeholders = ",".join("?" * len(job_ids))
+        self.conn.execute(f"DELETE FROM jobs WHERE id IN ({placeholders})", job_ids)
         self.conn.commit()
 
     def delete_job(self, job_id: int):
