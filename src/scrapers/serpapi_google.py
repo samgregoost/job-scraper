@@ -27,21 +27,23 @@ class SerpApiGoogleScraper(BaseScraper):
         queries = self._build_search_queries()
         locations = self.preferences.get("locations", [""])
 
-        max_offset = max(10, self.max_results)
         for query in queries:
             if len(jobs) >= self.max_results:
                 break
             location = locations[0] if locations else ""
-            for start in range(0, max_offset, 10):
+            next_page_token = None
+
+            for page in range(3):
                 try:
                     params = {
                         "engine": "google_jobs",
                         "q": query,
                         "api_key": api_key,
-                        "start": start,
                     }
                     if location and location.lower() != "remote":
                         params["location"] = location
+                    if next_page_token:
+                        params["next_page_token"] = next_page_token
 
                     resp = requests.get(API_URL, params=params, timeout=30)
                     resp.raise_for_status()
@@ -55,8 +57,6 @@ class SerpApiGoogleScraper(BaseScraper):
                         ext_id = item.get("job_id", item.get("title", "") + item.get("company_name", ""))
                         description = item.get("description", "")
 
-                        salary_min, salary_max = None, None
-
                         jobs.append(
                             Job(
                                 source=self.name,
@@ -64,10 +64,8 @@ class SerpApiGoogleScraper(BaseScraper):
                                 title=item.get("title", ""),
                                 company=item.get("company_name", ""),
                                 location=item.get("location", ""),
-                                url=item.get("share_link", item.get("related_links", [{}])[0].get("link", "") if item.get("related_links") else ""),
+                                url=item.get("share_link", ""),
                                 description=description,
-                                salary_min=salary_min,
-                                salary_max=salary_max,
                                 remote="remote" in item.get("location", "").lower()
                                 or "remote" in description.lower()[:200],
                                 posted_date=None,
@@ -75,10 +73,16 @@ class SerpApiGoogleScraper(BaseScraper):
                             )
                         )
 
-                    logger.info(f"SerpAPI: fetched {len(results)} jobs for '{query}' (start={start})")
+                    logger.info(f"SerpAPI: fetched {len(results)} jobs for '{query}' (page {page + 1})")
+
+                    # Get next page token for pagination
+                    next_page_token = data.get("serpapi_pagination", {}).get("next_page_token")
+                    if not next_page_token or len(jobs) >= self.max_results:
+                        break
+
                     time.sleep(2)
                 except Exception as e:
-                    logger.error(f"SerpAPI scrape failed for '{query}' start={start}: {e}")
+                    logger.error(f"SerpAPI scrape failed for '{query}' page {page + 1}: {e}")
                     break
 
         return jobs
