@@ -24,10 +24,15 @@ from src.email_digest import send_digest
 from src.scrapers.registry import get_enabled_scrapers
 from src.models import Job
 
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "job_scraper.log")
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler(LOG_FILE, encoding="utf-8"),
+    ],
 )
 logger = logging.getLogger("dashboard")
 
