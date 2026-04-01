@@ -497,6 +497,8 @@ def api_export_csv():
         status=request.args.get("status"),
         search=request.args.get("search"),
         min_score=float(request.args.get("min_score")) if request.args.get("min_score") else None,
+        date_from=request.args.get("date_from"),
+        date_to=request.args.get("date_to"),
         sort_by=request.args.get("sort_by", "score"),
         sort_dir=request.args.get("sort_dir", "DESC"),
         limit=10000,

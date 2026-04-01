@@ -125,6 +125,8 @@ class Database:
         status: str | None = None,
         search: str | None = None,
         min_score: float | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
         sort_by: str = "score",
         sort_dir: str = "DESC",
         limit: int = 50,
@@ -150,6 +152,12 @@ class Database:
         if min_score is not None:
             where_clauses.append("score >= ?")
             params.append(min_score)
+        if date_from:
+            where_clauses.append("scraped_at >= ?")
+            params.append(date_from)
+        if date_to:
+            where_clauses.append("scraped_at <= ?")
+            params.append(date_to + "T23:59:59")
 
         where = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
 
@@ -315,12 +323,12 @@ class Database:
         return [r["source"] for r in rows]
 
     def clear_all_scores(self):
-        """Reset scores, categories, and LLM reasoning for all jobs."""
+        """Reset scores, categories, and LLM reasoning. Preserves application_status."""
         self.conn.execute(
             "UPDATE jobs SET score = NULL, category = NULL, skill_matches = NULL, llm_reasoning = NULL"
         )
         self.conn.commit()
-        logger.info("Cleared all job scores")
+        logger.info("Cleared all job scores (application status preserved)")
 
     def close(self):
         self.conn.close()

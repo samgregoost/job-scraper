@@ -282,6 +282,12 @@ async function loadTopMatches() {
 }
 
 // ── Jobs Page ─────────────────────────────────────
+function clearDateFilters() {
+    document.getElementById('filterDateFrom').value = '';
+    document.getElementById('filterDateTo').value = '';
+    loadJobs();
+}
+
 async function loadJobs() {
     const params = new URLSearchParams({
         search: document.getElementById('searchInput')?.value || '',
@@ -294,6 +300,11 @@ async function loadJobs() {
         limit: JOBS_PER_PAGE,
         offset: jobsPage * JOBS_PER_PAGE,
     });
+
+    const dateFrom = document.getElementById('filterDateFrom')?.value;
+    const dateTo = document.getElementById('filterDateTo')?.value;
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo) params.set('date_to', dateTo);
 
     const data = await api('/api/jobs?' + params);
     jobsTotal = data.total;
@@ -747,6 +758,11 @@ function exportCSV(statusOverride) {
         if (source && source !== 'all') params.set('source', source);
         if (status && status !== 'all') params.set('status', status);
         if (sortBy) params.set('sort_by', sortBy);
+
+        const dateFrom = document.getElementById('filterDateFrom')?.value;
+        const dateTo = document.getElementById('filterDateTo')?.value;
+        if (dateFrom) params.set('date_from', dateFrom);
+        if (dateTo) params.set('date_to', dateTo);
     }
 
     if (dashMinScore > 0) params.set('min_score', dashMinScore);

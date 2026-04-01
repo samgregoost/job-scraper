@@ -184,6 +184,13 @@
         <option value="company">Company (A-Z)</option>
       </select>
     </div>
+    <div class="filters-bar">
+      <label style="font-size:12px;color:var(--text-muted);white-space:nowrap">From:</label>
+      <input type="date" class="input" id="filterDateFrom" onchange="loadJobs()" style="width:auto">
+      <label style="font-size:12px;color:var(--text-muted);white-space:nowrap">To:</label>
+      <input type="date" class="input" id="filterDateTo" onchange="loadJobs()" style="width:auto">
+      <button class="btn btn-sm btn-outline" onclick="clearDateFilters()">Clear dates</button>
+    </div>
 
     <div class="card">
       <div class="card-body no-pad">
