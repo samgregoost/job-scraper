@@ -86,7 +86,13 @@
 
     <!-- Application Pipeline -->
     <div class="card">
-      <div class="card-header">Application Pipeline</div>
+      <div class="card-header">
+        Application Pipeline
+        <button class="btn btn-sm btn-outline" onclick="exportCSV('all')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export All
+        </button>
+      </div>
       <div class="card-body">
         <div class="pipeline-track" id="pipelineTrack"></div>
         <div class="pipeline-stages" id="pipelineStages"></div>
@@ -142,6 +148,12 @@
   <div class="page" id="page-jobs">
     <div class="page-header">
       <h1>Jobs</h1>
+      <div class="header-actions">
+        <button class="btn btn-outline" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+      </div>
     </div>
 
     <div class="filters-bar">

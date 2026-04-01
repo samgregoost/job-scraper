@@ -430,6 +430,67 @@ def api_test_email():
         return jsonify({"error": str(e)}), 500
 
 
+# ── API: Export CSV ───────────────────────────────────────────────
+
+@app.route("/api/export/csv")
+def api_export_csv():
+    """Export jobs to CSV with optional filters."""
+    import csv
+    import io
+
+    db = get_db()
+    jobs, total = db.get_jobs(
+        category=request.args.get("category"),
+        source=request.args.get("source"),
+        status=request.args.get("status"),
+        search=request.args.get("search"),
+        min_score=float(request.args.get("min_score")) if request.args.get("min_score") else None,
+        sort_by=request.args.get("sort_by", "score"),
+        sort_dir=request.args.get("sort_dir", "DESC"),
+        limit=10000,
+        offset=0,
+    )
+    db.close()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Title", "Company", "Location", "Score", "Category",
+        "Status", "Skills Matched", "Source", "Remote",
+        "Salary Min", "Salary Max", "Currency",
+        "AI Reasoning", "URL", "Scraped At",
+    ])
+    for j in jobs:
+        writer.writerow([
+            j.get("title", ""),
+            j.get("company", ""),
+            j.get("location", ""),
+            j.get("score", ""),
+            j.get("category", ""),
+            j.get("application_status", ""),
+            j.get("skill_matches", ""),
+            j.get("source", ""),
+            "Yes" if j.get("remote") else "No",
+            j.get("salary_min", ""),
+            j.get("salary_max", ""),
+            j.get("salary_currency", ""),
+            j.get("llm_reasoning", ""),
+            j.get("url", ""),
+            j.get("scraped_at", ""),
+        ])
+
+    from flask import Response
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+    status_filter = request.args.get("status", "all")
+    filename = f"jobs_{status_filter}_{timestamp}.csv"
+
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
 # ── API: Logs ─────────────────────────────────────────────────────
 
 @app.route("/api/logs")

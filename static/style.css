@@ -150,6 +150,8 @@ a:hover { color: var(--primary-hover); }
 .pipeline-stage .stage-count { font-size: 24px; font-weight: 800; line-height: 1; }
 .pipeline-stage .stage-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
 .pipeline-stage .stage-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.pipeline-stage .stage-export { font-size: 10px; color: var(--text-dim); cursor: pointer; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.pipeline-stage .stage-export:hover { color: var(--primary); }
 
 .charts-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
 

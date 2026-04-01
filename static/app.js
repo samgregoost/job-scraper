@@ -95,9 +95,10 @@ function renderPipelineFunnel(stats) {
     const stagesEl = document.getElementById('pipelineStages');
     stagesEl.innerHTML = stages.map(s => {
         const count = funnel[s.key] || 0;
-        return `<div class="pipeline-stage" onclick="showPage('jobs'); document.getElementById('filterStatus').value='${s.key}'; loadJobs();">
-            <div class="stage-count" style="color:${s.color}">${count}</div>
+        return `<div class="pipeline-stage">
+            <div class="stage-count" style="color:${s.color};cursor:pointer" onclick="showPage('jobs'); document.getElementById('filterStatus').value='${s.key}'; loadJobs();">${count}</div>
             <div class="stage-label"><span class="stage-dot" style="background:${s.color}"></span>${s.label}</div>
+            ${count > 0 ? `<div class="stage-export" onclick="exportCSV('${s.key}')" title="Export ${s.label} to CSV">CSV</div>` : ''}
         </div>`;
     }).join('');
 }
@@ -724,6 +725,34 @@ async function testEmail() {
     } catch (e) {
         toast('Email test failed', 'error');
     }
+}
+
+// ── Export CSV ────────────────────────────────────
+function exportCSV(statusOverride) {
+    const params = new URLSearchParams();
+
+    if (statusOverride) {
+        // Called from pipeline section with a specific status or 'all'
+        if (statusOverride !== 'all') params.set('status', statusOverride);
+    } else {
+        // Called from Jobs page — use current filters
+        const search = document.getElementById('searchInput')?.value;
+        const category = document.getElementById('filterCategory')?.value;
+        const source = document.getElementById('filterSource')?.value;
+        const status = document.getElementById('filterStatus')?.value;
+        const sortBy = document.getElementById('sortBy')?.value;
+
+        if (search) params.set('search', search);
+        if (category && category !== 'all') params.set('category', category);
+        if (source && source !== 'all') params.set('source', source);
+        if (status && status !== 'all') params.set('status', status);
+        if (sortBy) params.set('sort_by', sortBy);
+    }
+
+    if (dashMinScore > 0) params.set('min_score', dashMinScore);
+
+    window.location.href = `/api/export/csv?${params}`;
+    toast('Downloading CSV...', 'success');
 }
 
 // ── Logs ──────────────────────────────────────────
