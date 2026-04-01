@@ -360,6 +360,11 @@ class Database:
         self.conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
         self.conn.commit()
 
+    def delete_all(self):
+        self.conn.execute("DELETE FROM jobs")
+        self.conn.commit()
+        logger.info("Deleted all jobs from database")
+
     def get_job_by_id(self, job_id: int) -> dict | None:
         row = self.conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
         return dict(row) if row else None

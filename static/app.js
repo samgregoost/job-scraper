@@ -941,6 +941,15 @@ function debounce(fn, ms) {
     };
 }
 
+// ── Delete All ───────────────────────────────────
+async function deleteAllJobs() {
+    if (!confirm('Delete ALL jobs from the database? This cannot be undone.')) return;
+    if (!confirm('Are you really sure, Neesha? Everything goes — scores, notes, history.')) return;
+    await api('/api/jobs/all', { method: 'DELETE' });
+    toast('All data cleared!', 'success');
+    loadDashboard();
+}
+
 // ── Bulk Actions ─────────────────────────────────
 function toggleJobSelect(id, checked) {
     if (checked) selectedJobs.add(id); else selectedJobs.delete(id);

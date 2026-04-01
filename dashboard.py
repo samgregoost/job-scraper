@@ -159,6 +159,14 @@ def api_bulk_delete():
     return jsonify({"ok": True, "count": len(job_ids)})
 
 
+@app.route("/api/jobs/all", methods=["DELETE"])
+def api_delete_all():
+    db = get_db()
+    db.delete_all()
+    db.close()
+    return jsonify({"ok": True})
+
+
 @app.route("/api/sources")
 def api_sources():
     db = get_db()
