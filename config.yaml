@@ -9,10 +9,14 @@ job_search_statement: ''
 
 preferences:
   job_titles:
-    - "Public relationships"
-    - "Media communication"
-    - "strategic communications"
-    - "project management"
+    - "Communications Manager"
+    - "Public Relations Manager"
+    - "Corporate Communications"
+    - "Media Relations Manager"
+    - "Head of Communications"
+    - "Public Affairs"
+    - "Campaign Manager"
+    - "Communications Officer"
   skills:
     - "Strategic Communications"
     - "Policy Communications"
