@@ -6,12 +6,13 @@ import requests
 
 from src.models import Job
 from src.scrapers.base import BaseScraper
+from src.scrapers.locations import resolve_locations
 
 logger = logging.getLogger(__name__)
 
 API_URL = "https://serpapi.com/search.json"
 
-# Map vague regions to specific countries SerpAPI accepts
+# Map vague regions to specific countries SerpAPI accepts (kept for reference)
 REGION_MAP = {
     "europe": ["United Kingdom", "Germany", "France", "Netherlands", "Spain", "Italy", "Sweden", "Switzerland", "Ireland", "Poland", "Portugal", "Belgium", "Austria", "Denmark", "Norway", "Finland", "Czech Republic"],
     "asia": ["Singapore", "Japan", "India", "South Korea", "China", "Hong Kong", "Taiwan", "Thailand", "Malaysia", "Philippines", "Indonesia", "Vietnam", "Bangladesh", "Pakistan", "Sri Lanka", "Myanmar", "Cambodia"],
@@ -37,21 +38,11 @@ REGION_MAP = {
 }
 
 
-def _resolve_locations(raw_locations: list[str]) -> list[str]:
-    """Convert user locations (which may include regions) to SerpAPI-compatible ones."""
-    result = []
-    for loc in raw_locations:
-        clean = loc.strip()
-        lower = clean.lower()
-        if lower in REGION_MAP:
-            result.extend(REGION_MAP[lower])
-        elif lower == "remote":
-            continue
-        else:
-            # "London, UK" -> "London" (SerpAPI rejects commas)
-            result.append(clean.split(",")[0].strip())
-    # Dedupe preserving order, cap at 8 to avoid burning credits
-    return list(dict.fromkeys(result))[:8] or [""]
+def _resolve_serp_locations(raw_locations: list[str]) -> list[str]:
+    """Convert user locations to SerpAPI-compatible ones (no commas)."""
+    resolved = resolve_locations(raw_locations, max_results=8)
+    # SerpAPI doesn't like commas — strip "London, UK" -> "London"
+    return [loc.split(",")[0].strip() for loc in resolved]
 
 
 class SerpApiGoogleScraper(BaseScraper):
@@ -67,7 +58,7 @@ class SerpApiGoogleScraper(BaseScraper):
 
         jobs = []
         queries = self._build_search_queries()
-        serp_locations = _resolve_locations(self.preferences.get("locations", []))
+        serp_locations = _resolve_serp_locations(self.preferences.get("locations", []))
         per_query = max(10, self.max_results // max(len(queries), 1))
         per_loc = max(10, per_query // max(len(serp_locations), 1))
 
