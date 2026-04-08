@@ -88,6 +88,7 @@ def api_jobs():
         status=request.args.get("status"),
         search=request.args.get("search"),
         min_score=float(request.args.get("min_score")) if request.args.get("min_score") else None,
+        run_id=int(request.args.get("run_id")) if request.args.get("run_id") else None,
         sort_by=request.args.get("sort_by", "score"),
         sort_dir=request.args.get("sort_dir", "DESC"),
         limit=int(request.args.get("limit", 50)),
@@ -163,6 +164,24 @@ def api_bulk_delete():
 def api_delete_all():
     db = get_db()
     db.delete_all()
+    db.close()
+    return jsonify({"ok": True})
+
+
+# ── API: Scrape Runs ─────────────────────────────────────────────
+
+@app.route("/api/runs")
+def api_runs():
+    db = get_db()
+    runs = db.get_runs(limit=30)
+    db.close()
+    return jsonify(runs)
+
+
+@app.route("/api/runs/<int:run_id>", methods=["DELETE"])
+def api_delete_run(run_id):
+    db = get_db()
+    db.delete_run(run_id)
     db.close()
     return jsonify({"ok": True})
 
@@ -366,8 +385,26 @@ def _run_pipeline_thread():
         if all_jobs:
             pipeline_state["progress"] = "Saving to database..."
             db = Database(config["database"]["path"])
+
+            # Create a scrape run
+            job_titles = config.get("preferences", {}).get("job_titles", [])
+            locations = config.get("preferences", {}).get("locations", [])
+            run_name = f"Scrape {datetime.now().strftime('%b %d %H:%M')}"
+            run_id = db.create_run(run_name, job_titles, locations)
+
             new_jobs = db.insert_jobs(all_jobs)
             result["new"] = len(new_jobs)
+
+            # Link all scraped jobs (new + existing) to this run
+            all_run_job_ids = []
+            for job in all_jobs:
+                row = db.conn.execute(
+                    "SELECT id FROM jobs WHERE source = ? AND external_id = ?",
+                    (job.source, job.external_id),
+                ).fetchone()
+                if row:
+                    all_run_job_ids.append(row[0])
+            db.link_jobs_to_run(run_id, all_run_job_ids)
 
             # Clear scores right before re-scoring (not earlier)
             pipeline_state["progress"] = "Clearing old scores..."
@@ -407,6 +444,9 @@ def _run_pipeline_thread():
                 min_score = config["scoring"]["thresholds"].get("worth_a_look", 40)
                 matches = db.get_todays_matches(min_score=min_score)
                 result["matches"] = len(matches)
+
+                # Update run stats
+                db.update_run_stats(run_id, len(all_jobs), len(new_jobs), len(matches))
 
                 if matches and config.get("email", {}).get("enabled"):
                     pipeline_state["progress"] = "Sending email digest..."

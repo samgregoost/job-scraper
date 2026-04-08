@@ -30,9 +30,29 @@ CREATE TABLE IF NOT EXISTS jobs (
     UNIQUE(source, external_id)
 );
 
+CREATE TABLE IF NOT EXISTS scrape_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    job_titles TEXT NOT NULL DEFAULT '',
+    locations TEXT NOT NULL DEFAULT '',
+    total_scraped INTEGER NOT NULL DEFAULT 0,
+    total_new INTEGER NOT NULL DEFAULT 0,
+    total_matches INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS run_jobs (
+    run_id INTEGER NOT NULL,
+    job_id INTEGER NOT NULL,
+    PRIMARY KEY (run_id, job_id),
+    FOREIGN KEY (run_id) REFERENCES scrape_runs(id),
+    FOREIGN KEY (job_id) REFERENCES jobs(id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_jobs_score ON jobs(score DESC);
 CREATE INDEX IF NOT EXISTS idx_jobs_scraped ON jobs(scraped_at);
 CREATE INDEX IF NOT EXISTS idx_jobs_category ON jobs(category);
+CREATE INDEX IF NOT EXISTS idx_run_jobs_run ON run_jobs(run_id);
 """
 
 
@@ -138,6 +158,7 @@ class Database:
         min_score: float | None = None,
         date_from: str | None = None,
         date_to: str | None = None,
+        run_id: int | None = None,
         sort_by: str = "score",
         sort_dir: str = "DESC",
         limit: int = 50,
@@ -146,6 +167,10 @@ class Database:
         """Flexible job query with filtering, sorting, pagination."""
         where_clauses = []
         params: list = []
+
+        if run_id:
+            where_clauses.append("jobs.id IN (SELECT job_id FROM run_jobs WHERE run_id = ?)")
+            params.append(run_id)
 
         if category and category != "all":
             where_clauses.append("category = ?")
@@ -361,9 +386,56 @@ class Database:
         self.conn.commit()
 
     def delete_all(self):
+        self.conn.execute("DELETE FROM run_jobs")
+        self.conn.execute("DELETE FROM scrape_runs")
         self.conn.execute("DELETE FROM jobs")
         self.conn.commit()
-        logger.info("Deleted all jobs from database")
+        logger.info("Deleted all jobs and run history from database")
+
+    # ── Scrape Runs ──────────────────────────────────
+
+    def create_run(self, name: str, job_titles: list[str], locations: list[str]) -> int:
+        now = datetime.now().isoformat()
+        cursor = self.conn.execute(
+            """INSERT INTO scrape_runs (name, created_at, job_titles, locations)
+               VALUES (?, ?, ?, ?)""",
+            (name, now, ", ".join(job_titles), ", ".join(locations)),
+        )
+        self.conn.commit()
+        return cursor.lastrowid
+
+    def update_run_stats(self, run_id: int, total_scraped: int, total_new: int, total_matches: int):
+        self.conn.execute(
+            """UPDATE scrape_runs SET total_scraped = ?, total_new = ?, total_matches = ?
+               WHERE id = ?""",
+            (total_scraped, total_new, total_matches, run_id),
+        )
+        self.conn.commit()
+
+    def link_jobs_to_run(self, run_id: int, job_ids: list[int]):
+        for jid in job_ids:
+            self.conn.execute(
+                "INSERT OR IGNORE INTO run_jobs (run_id, job_id) VALUES (?, ?)",
+                (run_id, jid),
+            )
+        self.conn.commit()
+
+    def get_runs(self, limit: int = 20) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT * FROM scrape_runs ORDER BY created_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_run_job_ids(self, run_id: int) -> list[int]:
+        rows = self.conn.execute(
+            "SELECT job_id FROM run_jobs WHERE run_id = ?", (run_id,)
+        ).fetchall()
+        return [r["job_id"] for r in rows]
+
+    def delete_run(self, run_id: int):
+        self.conn.execute("DELETE FROM run_jobs WHERE run_id = ?", (run_id,))
+        self.conn.execute("DELETE FROM scrape_runs WHERE id = ?", (run_id,))
+        self.conn.commit()
 
     def get_job_by_id(self, job_id: int) -> dict | None:
         row = self.conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()

@@ -129,6 +129,19 @@
       </div>
     </div>
 
+    <!-- Recent Hunts -->
+    <div class="card">
+      <div class="card-header">Recent Hunts</div>
+      <div class="card-body no-pad">
+        <table class="table" id="runsTable">
+          <thead>
+            <tr><th>Date</th><th>Search</th><th>Locations</th><th>Found</th><th>New</th><th>Matches</th><th></th></tr>
+          </thead>
+          <tbody id="runsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Top Matches -->
     <div class="card">
       <div class="card-header">
@@ -160,6 +173,9 @@
     </div>
 
     <div class="filters-bar">
+      <select class="input" id="filterRun" onchange="loadJobs()" style="min-width:180px">
+        <option value="all">All Hunts</option>
+      </select>
       <input type="text" class="input" id="searchInput" placeholder="Search jobs..." oninput="debounce(loadJobs, 300)()">
       <select class="input" id="filterCategory" onchange="loadJobs()">
         <option value="all">All Categories</option>

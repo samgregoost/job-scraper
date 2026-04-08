@@ -23,7 +23,7 @@ function showPage(page) {
     currentPage = page;
 
     if (page === 'dashboard') loadDashboard();
-    else if (page === 'jobs') { loadSources(); loadJobs(); }
+    else if (page === 'jobs') { loadSources(); loadRunsFilter(); loadJobs(); }
     else if (page === 'settings') { loadConfig(); loadCVStatus(); }
     else if (page === 'logs') loadLogs();
 }
@@ -67,6 +67,7 @@ async function loadDashboard() {
         });
 
         loadTopMatches();
+        loadRunsTable();
     } catch (e) {
         console.error('Failed to load dashboard:', e);
     }
@@ -307,6 +308,9 @@ async function loadJobs() {
     if (dateFrom) params.set('date_from', dateFrom);
     if (dateTo) params.set('date_to', dateTo);
 
+    const runId = document.getElementById('filterRun')?.value;
+    if (runId && runId !== 'all') params.set('run_id', runId);
+
     const data = await api('/api/jobs?' + params);
     jobsTotal = data.total;
     const tbody = document.getElementById('jobsBody');
@@ -353,6 +357,61 @@ async function loadSources() {
     select.innerHTML = '<option value="all">All Sources</option>' +
         sources.map(s => `<option value="${s}">${s}</option>`).join('');
     select.value = current;
+}
+
+async function loadRunsFilter() {
+    const runs = await api('/api/runs');
+    const select = document.getElementById('filterRun');
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = '<option value="all">All Hunts</option>' +
+        (runs || []).map(r => {
+            const date = new Date(r.created_at).toLocaleDateString('en-US', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+            return `<option value="${r.id}">${date} (${r.total_scraped} jobs)</option>`;
+        }).join('');
+    select.value = current;
+}
+
+async function loadRunsTable() {
+    const runs = await api('/api/runs');
+    const tbody = document.getElementById('runsBody');
+    if (!tbody) return;
+    if (!runs || !runs.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:20px">No hunts yet. Hit Go Fetch!</td></tr>';
+        return;
+    }
+    tbody.innerHTML = runs.map(r => {
+        const date = new Date(r.created_at).toLocaleDateString('en-US', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+        const titles = (r.job_titles || '').split(', ').slice(0, 3).join(', ');
+        const locs = (r.locations || '').split(', ').slice(0, 3).join(', ');
+        return `<tr>
+            <td style="white-space:nowrap">${date}</td>
+            <td><small>${esc(titles)}</small></td>
+            <td><small>${esc(locs)}</small></td>
+            <td>${r.total_scraped}</td>
+            <td>${r.total_new}</td>
+            <td>${r.total_matches}</td>
+            <td>
+                <button class="btn btn-sm btn-outline" onclick="viewRun(${r.id})">View</button>
+                <button class="btn-icon" onclick="deleteRun(${r.id})" title="Delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function viewRun(runId) {
+    showPage('jobs');
+    document.getElementById('filterRun').value = runId;
+    loadJobs();
+}
+
+async function deleteRun(runId) {
+    if (!confirm('Delete this hunt from history?')) return;
+    await api(`/api/runs/${runId}`, { method: 'DELETE' });
+    toast('Hunt removed from history', 'success');
+    loadRunsTable();
 }
 
 function renderPagination() {
