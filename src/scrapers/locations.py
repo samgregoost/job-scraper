@@ -27,19 +27,12 @@ REGION_MAP = {
     "remote": [],
 }
 
-# Adzuna uses 2-letter country codes
+# Adzuna only supports these countries (verified via API)
 ADZUNA_COUNTRY_MAP = {
     "United Kingdom": "gb", "Germany": "de", "France": "fr", "Netherlands": "nl",
-    "Spain": "es", "Italy": "it", "Sweden": "se", "Switzerland": "ch",
-    "Ireland": "ie", "Poland": "pl", "Portugal": "pt", "Belgium": "be",
-    "Austria": "at", "Denmark": "dk", "Norway": "no", "Finland": "fi",
-    "Czech Republic": "cz", "Singapore": "sg", "Japan": "jp", "India": "in",
-    "South Korea": "kr", "China": "cn", "Hong Kong": "hk", "Taiwan": "tw",
-    "Thailand": "th", "Malaysia": "my", "Philippines": "ph", "Indonesia": "id",
-    "Vietnam": "vn", "Brazil": "br", "Argentina": "ar", "Colombia": "co",
-    "Chile": "cl", "Peru": "pe", "Mexico": "mx", "United Arab Emirates": "ae",
-    "Saudi Arabia": "sa", "Turkey": "tr", "South Africa": "za", "Kenya": "ke",
-    "Nigeria": "ng", "Egypt": "eg", "Australia": "au", "New Zealand": "nz",
+    "Spain": "es", "Italy": "it", "Switzerland": "ch", "Austria": "at",
+    "Poland": "pl", "Belgium": "be", "Singapore": "sg", "India": "in",
+    "Brazil": "br", "South Africa": "za", "Australia": "au", "New Zealand": "nz",
     "United States": "us", "Canada": "ca",
 }
 
