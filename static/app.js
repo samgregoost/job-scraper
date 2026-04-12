@@ -395,7 +395,7 @@ async function loadRunsTable() {
             <td>${r.total_new}</td>
             <td>${r.total_matches}</td>
             <td>
-                <button class="btn btn-sm btn-outline" onclick="viewRun(${r.id})">View</button>
+                <button class="btn btn-sm btn-outline" onclick="viewRun(${r.id}, '${esc(r.locations || '')}')">View</button>
                 <button class="btn-icon" onclick="deleteRun(${r.id})" title="Delete">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -404,7 +404,7 @@ async function loadRunsTable() {
     }).join('');
 }
 
-async function viewRun(runId) {
+async function viewRun(runId, locations) {
     // Switch page without auto-loading jobs
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
@@ -412,10 +412,31 @@ async function viewRun(runId) {
     document.querySelector('.nav-link[data-page="jobs"]')?.classList.add('active');
     currentPage = 'jobs';
 
-    // Load filter dropdowns first, then set the run filter
+    // Load filter dropdowns first, then set filters
     await loadSources();
     await loadRunsFilter();
     document.getElementById('filterRun').value = String(runId);
+
+    // Auto-set location filter if the run had a single specific location
+    const locInput = document.getElementById('filterLocation');
+    if (locInput) {
+        const locs = (locations || '').split(', ').map(l => l.trim()).filter(l => l);
+        // If it's a single specific location (not a broad region), auto-fill it
+        if (locs.length === 1 && locs[0].toLowerCase() !== 'remote') {
+            locInput.value = locs[0];
+        } else {
+            locInput.value = '';
+        }
+    }
+
+    // Clear other filters to show clean run results
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    const filterCategory = document.getElementById('filterCategory');
+    if (filterCategory) filterCategory.value = 'all';
+    const filterStatus = document.getElementById('filterStatus');
+    if (filterStatus) filterStatus.value = 'all';
+
     loadJobs();
 }
 
