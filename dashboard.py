@@ -89,6 +89,7 @@ def api_jobs():
         search=request.args.get("search"),
         min_score=float(request.args.get("min_score")) if request.args.get("min_score") else None,
         run_id=int(request.args.get("run_id")) if request.args.get("run_id") else None,
+        location_filter=request.args.get("location_filter"),
         sort_by=request.args.get("sort_by", "score"),
         sort_dir=request.args.get("sort_dir", "DESC"),
         limit=int(request.args.get("limit", 50)),

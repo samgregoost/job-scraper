@@ -311,6 +311,9 @@ async function loadJobs() {
     const runId = document.getElementById('filterRun')?.value;
     if (runId && runId !== 'all') params.set('run_id', runId);
 
+    const locationFilter = document.getElementById('filterLocation')?.value;
+    if (locationFilter) params.set('location_filter', locationFilter);
+
     const data = await api('/api/jobs?' + params);
     jobsTotal = data.total;
     const tbody = document.getElementById('jobsBody');
@@ -401,9 +404,18 @@ async function loadRunsTable() {
     }).join('');
 }
 
-function viewRun(runId) {
-    showPage('jobs');
-    document.getElementById('filterRun').value = runId;
+async function viewRun(runId) {
+    // Switch page without auto-loading jobs
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById('page-jobs')?.classList.add('active');
+    document.querySelector('.nav-link[data-page="jobs"]')?.classList.add('active');
+    currentPage = 'jobs';
+
+    // Load filter dropdowns first, then set the run filter
+    await loadSources();
+    await loadRunsFilter();
+    document.getElementById('filterRun').value = String(runId);
     loadJobs();
 }
 

@@ -196,6 +196,7 @@
         <option value="offer">Offer</option>
         <option value="saved">Saved</option>
       </select>
+      <input type="text" class="input" id="filterLocation" placeholder="Filter by location..." oninput="debounce(loadJobs, 300)()" style="width:auto;min-width:150px">
       <select class="input" id="sortBy" onchange="loadJobs()">
         <option value="score">Score (High-Low)</option>
         <option value="scraped_at">Newest First</option>

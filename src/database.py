@@ -159,6 +159,7 @@ class Database:
         date_from: str | None = None,
         date_to: str | None = None,
         run_id: int | None = None,
+        location_filter: str | None = None,
         sort_by: str = "score",
         sort_dir: str = "DESC",
         limit: int = 50,
@@ -182,12 +183,15 @@ class Database:
             where_clauses.append("application_status = ?")
             params.append(status)
         if search:
-            where_clauses.append("(title LIKE ? OR company LIKE ? OR description LIKE ?)")
+            where_clauses.append("(title LIKE ? OR company LIKE ? OR location LIKE ? OR description LIKE ?)")
             term = f"%{search}%"
-            params.extend([term, term, term])
+            params.extend([term, term, term, term])
         if min_score is not None:
             where_clauses.append("score >= ?")
             params.append(min_score)
+        if location_filter:
+            where_clauses.append("location LIKE ?")
+            params.append(f"%{location_filter}%")
         if date_from:
             where_clauses.append("scraped_at >= ?")
             params.append(date_from)
